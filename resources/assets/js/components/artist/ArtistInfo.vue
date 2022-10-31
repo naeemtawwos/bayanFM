@@ -2,7 +2,7 @@
   <article :class="mode" class="artist-info" data-testid="artist-info">
     <h1 v-if="mode === 'aside'" class="name">
       <span>{{ artist.name }}</span>
-      <button :title="`Play all songs by ${artist.name}`" class="control" type="button" @click.prevent="play">
+      <button :title="`Play all audios by ${artist.name}`" class="control" type="button" @click.prevent="play">
         <icon :icon="faCirclePlay" size="xl"/>
       </button>
     </h1>

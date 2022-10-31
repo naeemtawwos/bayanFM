@@ -87,7 +87,7 @@ header.screen-header {
   }
 
   h1.name {
-    font-size: 4rem;
+    font-size: 2.5rem;
     font-weight: var(--font-weight-bold);
     overflow: hidden;
     white-space: nowrap;

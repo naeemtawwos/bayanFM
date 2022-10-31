@@ -58,15 +58,17 @@ const { isAdmin } = useAuthorization()
 const dialog = requireInjection(DialogBoxKey)
 
 const greetings = [
-  'Oh hai!',
-  'Hey, %s!',
-  'Howdy, %s!',
-  'Yo!',
-  'How’s it going, %s?',
-  'Sup, %s?',
-  'How’s life, %s?',
-  'How’s your day, %s?',
-  'How have you been, %s?'
+
+  // 'Hey, %s!',
+  // 'Howdy, %s!',
+  // 'Yo!',
+  // 'How’s it going, %s?',
+  // 'Sup, %s?',
+  // 'How’s life, %s?',
+  // 'How’s your day, %s?',
+  'Boost your Eeman today, %s.',
+  // 'As Salaamu alaikum, %s.',
+  // 'May Allaah provide you the best of both worlds, %s.',
 ]
 
 const greeting = computed(() => sample(greetings)!.replace('%s', userStore.current?.name))

@@ -39,7 +39,7 @@
     <ScreenTabs>
       <template #header>
         <label :class="{ active: activeTab === 'Songs' }">
-          Songs
+          Audios
           <input type="radio" name="tab" value="Songs" v-model="activeTab"/>
         </label>
         <label :class="{ active: activeTab === 'Albums' }">
