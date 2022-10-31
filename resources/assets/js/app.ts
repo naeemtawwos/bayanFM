@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
-import { clickaway, focus } from '@/directives'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { clickaway, focus, hideBrokenIcon, tooltip } from '@/directives'
+import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
 import { RouterKey } from '@/symbols'
 import { routes } from '@/config'
 import Router from '@/router'
@@ -9,8 +9,11 @@ import App from './App.vue'
 createApp(App)
   .provide(RouterKey, new Router(routes))
   .component('icon', FontAwesomeIcon)
+  .component('icon-layers', FontAwesomeLayers)
   .directive('koel-focus', focus)
   .directive('koel-clickaway', clickaway)
+  .directive('koel-tooltip', tooltip)
+  .directive('koel-hide-broken-icon', hideBrokenIcon)
   /**
    * For Ancelot, the ancient cross of war
    * for the holy town of Gods

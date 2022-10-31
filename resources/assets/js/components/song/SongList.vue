@@ -18,8 +18,8 @@
         @click="sort('track')"
       >
         #
-        <icon v-if="sortField === 'track' && sortOrder === 'asc'" :icon="faAngleDown" class="text-highlight"/>
-        <icon v-if="sortField === 'track' && sortOrder === 'desc'" :icon="faAngleUp" class="text-highlight"/>
+        <icon v-if="sortField === 'track' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+        <icon v-if="sortField === 'track' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
       </span>
       <span
         v-if="config.columns.includes('title')"
@@ -30,8 +30,8 @@
         @click="sort('title')"
       >
         Title
-        <icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="faAngleDown" class="text-highlight"/>
-        <icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="faAngleUp" class="text-highlight"/>
+        <icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+        <icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
       </span>
       <span
         v-if="config.columns.includes('artist')"
@@ -42,8 +42,8 @@
         @click="sort('artist_name')"
       >
         Artist
-        <icon v-if="sortField === 'artist_name' && sortOrder === 'asc'" :icon="faAngleDown" class="text-highlight"/>
-        <icon v-if="sortField === 'artist_name' && sortOrder === 'desc'" :icon="faAngleUp" class="text-highlight"/>
+        <icon v-if="sortField === 'artist_name' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+        <icon v-if="sortField === 'artist_name' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
       </span>
       <span
         v-if="config.columns.includes('album')"
@@ -54,8 +54,8 @@
         @click="sort('album_name')"
       >
         Album
-        <icon v-if="sortField === 'album_name' && sortOrder === 'asc'" :icon="faAngleDown" class="text-highlight"/>
-        <icon v-if="sortField === 'album_name' && sortOrder === 'desc'" :icon="faAngleUp" class="text-highlight"/>
+        <icon v-if="sortField === 'album_name' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+        <icon v-if="sortField === 'album_name' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
       </span>
       <span
         v-if="config.columns.includes('length')"
@@ -65,18 +65,16 @@
         title="Sort by song duration"
         @click="sort('length')"
       >
-        <icon v-if="sortField === 'length' && sortOrder === 'asc'" :icon="faAngleDown" class="text-highlight"/>
-        <icon v-if="sortField === 'length' && sortOrder === 'desc'" :icon="faAngleUp" class="text-highlight"/>
-        &nbsp;
-        <icon :icon="faClock" class="duration-header"/>
+        Time
+        <icon v-if="sortField === 'length' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+        <icon v-if="sortField === 'length' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
       </span>
       <span class="favorite"></span>
-      <span class="play"></span>
     </div>
 
     <VirtualScroller
       v-slot="{ item }"
-      :item-height="35"
+      :item-height="64"
       :items="songRows"
       @scroll="onScroll"
       @scrolled-to-end="$emit('scrolled-to-end')"
@@ -101,9 +99,8 @@
 <script lang="ts" setup>
 import { findIndex } from 'lodash'
 import isMobile from 'ismobilejs'
-import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons'
-import { faClock } from '@fortawesome/free-regular-svg-icons'
-import { computed, onMounted, Ref, ref, watch } from 'vue'
+import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons'
+import { computed, nextTick, onMounted, Ref, ref, watch } from 'vue'
 import { eventBus, requireInjection } from '@/utils'
 import { useDraggable, useDroppable } from '@/composables'
 import {
@@ -141,7 +138,7 @@ watch(songRows, () => setSelectedSongs(songRows.value.filter(row => row.selected
 const config = computed((): SongListConfig => {
   return Object.assign({
     sortable: true,
-    columns: ['track', 'title', 'artist', 'album', 'length']
+    columns: ['track', 'thumbnail', 'title', 'artist', 'album', 'length']
   }, injectedConfig)
 })
 
@@ -290,6 +287,9 @@ const openContextMenu = async (row: SongRow, event: MouseEvent) => {
   if (!row.selected) {
     clearSelection()
     toggleRow(row)
+
+    // awaiting a next tick so that the selected songs are collected properly
+    await nextTick()
   }
 
   eventBus.emit('SONG_CONTEXT_MENU_REQUESTED', event, selectedSongs.value)
@@ -333,9 +333,8 @@ onMounted(() => render())
     white-space: nowrap;
 
     &.time {
-      flex-basis: 96px;
-      padding-right: 24px;
-      text-align: right;
+      flex-basis: 64px;
+      overflow: visible;
     }
 
     &.track-number {
@@ -344,7 +343,7 @@ onMounted(() => render())
     }
 
     &.artist {
-      flex-basis: 23%;
+      flex-basis: 20%;
     }
 
     &.album {
@@ -436,6 +435,11 @@ onMounted(() => render())
       padding: 0;
       vertical-align: bottom;
       color: var(--color-text-primary);
+
+      &.thumbnail {
+        display: block;
+        padding-right: 12px;
+      }
 
       &.artist, &.title {
         display: inline;

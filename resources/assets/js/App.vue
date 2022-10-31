@@ -3,6 +3,7 @@
   <DialogBox ref="dialog"/>
   <MessageToaster ref="toaster"/>
   <GlobalEventListeners/>
+  <OfflineNotification v-if="offline"/>
 
   <div v-if="authenticated" id="main" @dragend="onDragEnd" @dragover="onDragOver" @drop="onDrop">
     <Hotkeys/>
@@ -31,21 +32,23 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, nextTick, onMounted, provide, ref, watch } from 'vue'
-import { eventBus, hideOverlay, requireInjection, showOverlay } from '@/utils'
+import { hideOverlay, requireInjection, showOverlay } from '@/utils'
 import { commonStore, preferenceStore as preferences, queueStore } from '@/stores'
-import { authService, playbackService, socketListener, socketService, uploadService } from '@/services'
+import { authService, socketListener, socketService, uploadService } from '@/services'
 import { CurrentSongKey, DialogBoxKey, MessageToasterKey, RouterKey } from '@/symbols'
+import { useNetworkStatus } from '@/composables'
 
 import DialogBox from '@/components/ui/DialogBox.vue'
 import MessageToaster from '@/components/ui/MessageToaster.vue'
 import Overlay from '@/components/ui/Overlay.vue'
+import OfflineNotification from '@/components/ui/OfflineNotification.vue'
 
 // Do not dynamic-import app footer, as it contains the <audio> element
 // that is necessary to properly initialize the playService and equalizer.
 import AppFooter from '@/components/layout/app-footer/index.vue'
 import Btn from '@/components/ui/Btn.vue'
 // GlobalEventListener must NOT be lazy-loaded, so that it can handle LOG_OUT event properly.
-import GlobalEventListeners from '@/components/utils/GlobalEventListeners.vue'
+import { GlobalEventListeners } from '@/components/utils/GlobalEventListeners'
 
 const Hotkeys = defineAsyncComponent(() => import('@/components/utils/HotkeyListener.vue'))
 const LoginForm = defineAsyncComponent(() => import('@/components/auth/LoginForm.vue'))
@@ -65,6 +68,8 @@ const toaster = ref<InstanceType<typeof MessageToaster>>()
 const currentSong = ref<Song | null>(null)
 const authenticated = ref(false)
 const showDropZone = ref(false)
+
+const { offline } = useNetworkStatus()
 
 /**
  * Request for notification permission if it's not provided and the user is OK with notifications.
@@ -104,7 +109,6 @@ const init = async () => {
     await commonStore.init()
     await nextTick()
 
-    playbackService.init()
     await requestNotificationPermission()
 
     window.addEventListener('beforeunload', (e: BeforeUnloadEvent) => {
@@ -117,9 +121,6 @@ const init = async () => {
     await socketService.init() && socketListener.listen()
 
     hideOverlay()
-
-    // Let all other components know we're ready.
-    eventBus.emit('KOEL_READY')
   } catch (err) {
     authenticated.value = false
     throw err
@@ -132,7 +133,7 @@ const onDragOver = (e: DragEvent) => {
   showDropZone.value = Boolean(e.dataTransfer?.types.includes('Files')) && router.$currentRoute.value.screen !== 'Upload'
 }
 
-watch(() => queueStore.current, song => (currentSong.value = song))
+watch(() => queueStore.current, song => song && (currentSong.value = song))
 
 const onDragEnd = () => (showDropZone.value = false)
 const onDrop = () => (showDropZone.value = false)
@@ -185,6 +186,10 @@ provide(CurrentSongKey, currentSong)
 
 #main {
   @media screen and (max-width: 768px) {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
     padding-top: var(--header-height);
   }
 }

@@ -240,6 +240,28 @@ label {
   &thin {
     font-weight: var(--font-weight-thin) !important;
   }
+
+  &normal {
+    font-weight: var(--font-weight-normal) !important;
+  }
+
+  &light {
+    font-weight: var(--font-weight-light) !important;
+  }
+
+  &bold {
+    font-weight: var(--font-weight-bold) !important;
+  }
+}
+
+.bg- {
+  &primary {
+    background-color: var(--color-bg-primary) !important;
+  }
+
+  &secondary {
+    background-color: var(--color-bg-secondary) !important;
+  }
 }
 
 .d- {
@@ -289,7 +311,7 @@ label {
 
     &.separator {
       pointer-events: none;
-      padding: 1px 0;
+      padding: 0;
       border-bottom: 1px solid rgba(255, 255, 255, .1);
     }
 

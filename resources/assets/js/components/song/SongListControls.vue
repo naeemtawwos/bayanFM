@@ -10,7 +10,7 @@
             title="Play all songs"
             @click.prevent="playAll"
           >
-            <icon :icon="faPlay"/>
+            <icon :icon="faPlay" fixed-width/>
             All
           </Btn>
 
@@ -21,7 +21,7 @@
             title="Play selected songs"
             @click.prevent="playSelected"
           >
-            <icon :icon="faPlay"/>
+            <icon :icon="faPlay" fixed-width/>
             Selected
           </Btn>
         </template>
@@ -35,7 +35,7 @@
             title="Shuffle all songs"
             @click.prevent="shuffle"
           >
-            <icon :icon="faRandom"/>
+            <icon :icon="faRandom" fixed-width/>
             All
           </Btn>
 
@@ -47,7 +47,7 @@
             title="Shuffle selected songs"
             @click.prevent="shuffleSelected"
           >
-            <icon :icon="faRandom"/>
+            <icon :icon="faRandom" fixed-width/>
             Selected
           </Btn>
         </template>
@@ -68,13 +68,13 @@
 
       <Btn
         v-if="showDeletePlaylistButton"
+        v-koel-tooltip
         class="del btn-delete-playlist"
         red
         title="Delete this playlist"
         @click.prevent="deletePlaylist"
       >
-        <icon :icon="faTimes"/>
-        Playlist
+        <icon :icon="faTrashCan"/>
       </Btn>
 
     </BtnGroup>
@@ -90,7 +90,7 @@
 </template>
 
 <script lang="ts" setup>
-import { faPlay, faRandom, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faRandom, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { computed, nextTick, onMounted, onUnmounted, ref, toRefs } from 'vue'
 import { SelectedSongsKey, SongsKey } from '@/symbols'
 import { requireInjection } from '@/utils'
