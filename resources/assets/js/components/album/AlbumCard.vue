@@ -16,7 +16,7 @@
 
     <template #meta>
       <a
-        :title="`Shuffle all songs in the album ${album.name}`"
+        :title="`Shuffle all audios in the album ${album.name}`"
         class="shuffle-album"
         data-testid="shuffle-album"
         href
@@ -27,7 +27,7 @@
       </a>
       <a
         v-if="allowDownload"
-        :title="`Download all songs in the album ${album.name}`"
+        :title="`Download all audios in the album ${album.name}`"
         class="download-album"
         data-testid="download-album"
         href
