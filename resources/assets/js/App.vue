@@ -20,9 +20,11 @@
 
   <div v-else class="login-wrapper">
     <LoginForm @loggedin="onUserLoggedIn"/>
-    <div class="or">
+    <!-- <div class="or">
       or
-    </div>
+    </div> -->
+    <Btn @click="showRegister">Create an Account</Btn>
+
     <RegistrationForm @loggedin="onUserLoggedIn"/>
   </div>
 </template>
@@ -41,7 +43,7 @@ import Overlay from '@/components/ui/Overlay.vue'
 // Do not dynamic-import app footer, as it contains the <audio> element
 // that is necessary to properly initialize the playService and equalizer.
 import AppFooter from '@/components/layout/app-footer/index.vue'
-
+import Btn from '@/components/ui/Btn.vue'
 // GlobalEventListener must NOT be lazy-loaded, so that it can handle LOG_OUT event properly.
 import GlobalEventListeners from '@/components/utils/GlobalEventListeners.vue'
 
@@ -78,6 +80,10 @@ const onUserLoggedIn = async () => {
   await init()
 }
 
+
+function showRegister(){
+  alert('show register');
+}
 
 onMounted(async () => {
   // The app has just been initialized, check if we can get the user data with an already existing token
