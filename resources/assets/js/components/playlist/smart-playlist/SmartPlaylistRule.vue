@@ -1,7 +1,7 @@
 <template>
   <div class="row" data-testid="smart-playlist-rule-row">
-    <Btn class="remove-rule" red @click.prevent="removeRule">
-      <icon :icon="faTimes"/>
+    <Btn class="remove-rule" red title="Remove this rule" @click.prevent="removeRule">
+      <icon :icon="faTrashCan"/>
     </Btn>
 
     <select v-model="selectedModel" name="model[]">
@@ -28,7 +28,7 @@
 </template>
 
 <script lang="ts" setup>
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { computed, defineAsyncComponent, ref, toRefs, watch } from 'vue'
 import models from '@/config/smart-playlist/models'
 import inputTypes from '@/config/smart-playlist/inputTypes'

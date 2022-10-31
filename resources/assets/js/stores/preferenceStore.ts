@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { userStore } from '@/stores'
 import { localStorageService } from '@/services'
 
@@ -14,11 +14,13 @@ interface Preferences extends Record<string, any> {
   transcodeOnMobile: boolean
   supportBarNoBugging: boolean
   showAlbumArtOverlay: boolean
+  lyricsZoomLevel: number | null
   theme?: Theme['id'] | null
 }
 
 const preferenceStore = {
   storeKey: '',
+  initialized: ref(false),
 
   state: reactive<Preferences>({
     volume: 7,
@@ -35,6 +37,7 @@ const preferenceStore = {
     transcodeOnMobile: false,
     supportBarNoBugging: false,
     showAlbumArtOverlay: true,
+    lyricsZoomLevel: 1,
     theme: null
   }),
 
@@ -43,6 +46,8 @@ const preferenceStore = {
     this.storeKey = `preferences_${initUser.id}`
     Object.assign(this.state, localStorageService.get(this.storeKey, this.state))
     this.setupProxy()
+
+    this.initialized.value = true
   },
 
   /**

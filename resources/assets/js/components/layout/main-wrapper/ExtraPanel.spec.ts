@@ -21,7 +21,7 @@ new class extends UnitTestCase {
           ExtraPanelTabHeader: this.stub()
         },
         provide: {
-          [CurrentSongKey]: songRef
+          [<symbol>CurrentSongKey]: songRef
         }
       }
     })
@@ -59,6 +59,14 @@ new class extends UnitTestCase {
       await fireEvent.click(getByTitle('About Bayan FM'))
 
       expect(emitMock).toHaveBeenCalledWith('MODAL_SHOW_ABOUT_KOEL')
+    })
+
+    it('notifies new version', async () => {
+      it('shows new version', () => {
+        commonStore.state.current_version = 'v1.0.0'
+        commonStore.state.latest_version = 'v1.0.1'
+        this.actingAsAdmin().renderComponent().getByTitle('New version available!')
+      })
     })
 
     it('logs out', async () => {

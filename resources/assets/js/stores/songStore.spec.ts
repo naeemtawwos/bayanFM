@@ -34,11 +34,11 @@ new class extends UnitTestCase {
     })
 
     it('gets formatted length', () => {
-      expect(songStore.getFormattedLength(factory<Song>('song', { length: 123 }))).toBe('02:03')
+      expect(songStore.getFormattedLength(factory<Song>('song', { length: 123 }))).toBe('2 min 3 sec')
       expect(songStore.getFormattedLength([
         factory<Song>('song', { length: 122 }),
         factory<Song>('song', { length: 123 })
-      ])).toBe('04:05')
+      ])).toBe('4 min 5 sec')
     })
 
     it('gets songs by album', () => {
@@ -252,6 +252,44 @@ new class extends UnitTestCase {
       expect(getMock).toHaveBeenCalledWith('songs?page=2&sort=title&order=desc')
       expect(syncMock).toHaveBeenCalledWith(songs)
       expect(songStore.state.songs).toEqual(reactive(songs))
+    })
+
+    it('paginates for genre', async () => {
+      const songs = factory<Song>('song', 3)
+      const reactiveSongs = reactive(songs)
+
+      const getMock = this.mock(http, 'get').mockResolvedValueOnce({
+        data: songs,
+        links: {
+          next: 'http://test/api/v1/songs?page=3'
+        },
+        meta: {
+          current_page: 2
+        }
+      })
+
+      const syncMock = this.mock(songStore, 'syncWithVault', reactiveSongs)
+
+      expect(await songStore.paginateForGenre('foo', 'title', 'desc', 2)).toEqual({
+        songs: reactiveSongs,
+        nextPage: 3
+      })
+
+      expect(getMock).toHaveBeenCalledWith('genres/foo/songs?page=2&sort=title&order=desc')
+      expect(syncMock).toHaveBeenCalledWith(songs)
+    })
+
+    it('fetches random songs for genre', async () => {
+      const songs = factory<Song>('song', 3)
+      const reactiveSongs = reactive(songs)
+
+      const getMock = this.mock(http, 'get').mockResolvedValueOnce(songs)
+      const syncMock = this.mock(songStore, 'syncWithVault', reactiveSongs)
+
+      expect(await songStore.fetchRandomForGenre('foo')).toEqual(reactiveSongs)
+
+      expect(getMock).toHaveBeenCalledWith('genres/foo/songs/random?limit=500')
+      expect(syncMock).toHaveBeenCalledWith(songs)
     })
   }
 }

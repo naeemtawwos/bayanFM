@@ -64,7 +64,7 @@ const showSummary = computed(() => mode.value !== 'full' && !showingFullWiki.val
 const showFull = computed(() => !showSummary.value)
 
 const play = async () => {
-  await playbackService.queueAndPlay(await songStore.fetchForAlbum(album.value))
+  playbackService.queueAndPlay(await songStore.fetchForAlbum(album.value))
   router.go('queue')
 }
 </script>
@@ -76,7 +76,7 @@ const play = async () => {
   .track-listing {
     margin-top: 2rem;
 
-    ::v-deep(h1) {
+    :deep(h1) {
       margin-bottom: 1.2rem;
     }
   }

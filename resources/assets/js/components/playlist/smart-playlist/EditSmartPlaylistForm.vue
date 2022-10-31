@@ -26,7 +26,7 @@
               :isFirstGroup="index === 0"
               @input="onGroupChanged"
             />
-            <Btn class="btn-add-group" green small uppercase @click.prevent="addGroup">
+            <Btn class="btn-add-group" green small title="Add a new group" uppercase @click.prevent="addGroup">
               <icon :icon="faPlus"/>
             </Btn>
           </div>
@@ -96,7 +96,7 @@ const submit = async () => {
     })
 
     toaster.value.success(`Playlist "${playlist.value.name}" updated.`)
-    eventBus.emit('SMART_PLAYLIST_UPDATED', playlist.value)
+    eventBus.emit('PLAYLIST_UPDATED', playlist.value)
     close()
   } catch (error) {
     dialog.value.error('Something went wrong. Please try again.', 'Error')

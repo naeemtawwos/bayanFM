@@ -2,7 +2,7 @@ import isMobile from 'ismobilejs'
 import slugify from 'slugify'
 import { merge, orderBy, sumBy, take, unionBy, uniqBy } from 'lodash'
 import { reactive, UnwrapNestedRefs, watch } from 'vue'
-import { arrayify, logger, secondsToHis, use } from '@/utils'
+import { arrayify, logger, secondsToHumanReadable, use } from '@/utils'
 import { authService, cache, http } from '@/services'
 import { albumStore, artistStore, commonStore, overviewStore, playlistStore, preferenceStore } from '@/stores'
 
@@ -35,7 +35,7 @@ export const songStore = {
     songs: [] as Song[]
   }),
 
-  getFormattedLength: (songs: Song | Song[]) => secondsToHis(sumBy(arrayify(songs), 'length')),
+  getFormattedLength: (songs: Song | Song[]) => secondsToHumanReadable(sumBy(arrayify(songs), 'length')),
 
   byId (id: string) {
     const song = this.vault.get(id)
@@ -168,6 +168,26 @@ export const songStore = {
     }
 
     return uniqBy(songs, 'id')
+  },
+
+  async paginateForGenre (genre: Genre | string, sortField: SongListSortField, sortOrder: SortOrder, page: number) {
+    const name = typeof genre === 'string' ? genre : genre.name
+
+    const resource = await http.get<PaginatorResource>(
+      `genres/${name}/songs?page=${page}&sort=${sortField}&order=${sortOrder}`
+    )
+
+    const songs = this.syncWithVault(resource.data)
+
+    return {
+      songs,
+      nextPage: resource.links.next ? ++resource.meta.current_page : null
+    }
+  },
+
+  async fetchRandomForGenre (genre: Genre | string, limit = 500) {
+    const name = typeof genre === 'string' ? genre : genre.name
+    return this.syncWithVault(await http.get<Song[]>(`genres/${name}/songs/random?limit=${limit}`))
   },
 
   async paginate (sortField: SongListSortField, sortOrder: SortOrder, page: number) {

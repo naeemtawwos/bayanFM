@@ -6,13 +6,13 @@
 
 <style lang="scss" scoped>
 .btn-group {
-  --radius: 9999px;
+  --radius: 5px;
 
   display: flex;
   position: relative;
   flex-wrap: nowrap;
 
-  ::v-deep(button) {
+  :deep(button) {
     &:not(:first-child) {
       border-radius: 0;
     }
@@ -30,7 +30,7 @@
     }
   }
 
-  &[uppercased] ::v-deep(button) {
+  &[uppercased] :deep(button) {
     text-transform: uppercase;
   }
 }

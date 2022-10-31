@@ -40,6 +40,12 @@
             Artists
           </a>
         </li>
+        <li>
+          <a :class="['genres', activeScreen === 'Genres' ? 'active' : '']" href="#/genres">
+            <icon :icon="faTags" fixed-width/>
+            Genres
+          </a>
+        </li>
         <li v-if="useYouTube">
           <a :class="['youtube', activeScreen === 'YouTube' ? 'active' : '']" href="#/youtube">
             <icon :icon="faYoutube" fixed-width/>
@@ -85,6 +91,7 @@ import {
   faListOl,
   faMicrophone,
   faMusic,
+  faTags,
   faTools,
   faUpload,
   faUsers
@@ -180,17 +187,17 @@ nav {
     flex: 1;
   }
 
-  ::v-deep(h1) {
+  :deep(h1) {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 12px;
   }
 
-  ::v-deep(a svg) {
+  :deep(a svg) {
     opacity: .7;
   }
 
-  ::v-deep(a) {
+  :deep(a) {
     display: flex;
     align-items: center;
     gap: .7rem;
@@ -223,7 +230,7 @@ nav {
     }
   }
 
-  ::v-deep(li li a) { // submenu items
+  :deep(li li a) { // submenu items
     padding-left: 11px;
 
     &:active {

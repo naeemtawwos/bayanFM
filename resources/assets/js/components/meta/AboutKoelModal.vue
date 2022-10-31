@@ -9,7 +9,7 @@
         <img alt="Koel's logo" src="@/../img/logo.svg" width="128">
       </div>
 
-      <p class="current-version">{{ currentVersion }}</p>
+      <p class="current-version">Koel {{ currentVersion }}</p>
 
       <p v-if="shouldNotifyNewVersion" data-testid="new-version-about">
         <a :href="latestVersionReleaseUrl" target="_blank">
@@ -19,17 +19,22 @@
 
       <p class="author">
         Made with ❤️ by
-        <a href="https://github.com/naeemtawwos" rel="noopener" target="_blank">Naeem</a>
+        <a href="https://github.com/phanan" rel="noopener" target="_blank">Phan An</a>
+        and quite a few
+        <a href="https://github.com/koel/core/graphs/contributors" rel="noopener" target="_blank">awesome</a>
+        <a href="https://github.com/koel/koel/graphs/contributors" rel="noopener" target="_blank">contributors</a>.
       </p>
 
       <div v-if="isDemo" class="credit-wrapper" data-testid="demo-credits">
-        Audios by
+        Music by
         <ul class="credits">
           <li v-for="credit in credits" :key="credit.name">
             <a :href="credit.url" target="_blank">{{ credit.name }}</a>
           </li>
         </ul>
       </div>
+
+      <SponsorList/>
 
       <p>
         Loving Bayan FM? Please consider supporting us by
@@ -52,6 +57,7 @@ import { isDemo } from '@/utils'
 import { useNewVersionNotification } from '@/composables'
 import { http } from '@/services'
 
+import SponsorList from '@/components/meta/SponsorList.vue'
 import Btn from '@/components/ui/Btn.vue'
 
 type DemoCredits = {
@@ -59,7 +65,7 @@ type DemoCredits = {
   url: string
 }
 
-const credits = ref<DemoCredits[]>([])
+const credits = ref<DemoCredits[] | null>(null)
 
 const {
   shouldNotifyNewVersion,
@@ -72,43 +78,35 @@ const emit = defineEmits(['close'])
 const close = () => emit('close')
 
 onMounted(async () => {
-  credits.value = isDemo ? orderBy(await http.get<DemoCredits[]>('demo/credits'), 'name') : []
+  credits.value = isDemo() ? orderBy(await http.get<DemoCredits[]>('demo/credits'), 'name') : null
 })
 </script>
 
 <style lang="scss" scoped>
 .about {
   text-align: center;
-  background: var(--color-bg-primary);
   max-width: 480px;
-  width: 90%;
-  border-radius: .6rem;
   overflow: hidden;
+  position: relative;
 
   main {
-    padding: 2rem;
+    padding: 1.8rem;
 
     p {
       margin: 1rem 0;
     }
   }
 
-  header, footer {
+  footer {
     padding: 1rem;
-    background: rgba(255, 255, 255, .05);
-  }
-
-  header {
-    font-size: 1.2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, .1);
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, .02);
   }
 
   a {
     color: var(--color-text-primary);
 
     &:hover {
-      color: var(--color-highlight);
+      color: var(--color-accent);
     }
   }
 }
@@ -144,5 +142,9 @@ onMounted(async () => {
       content: ', ';
     }
   }
+}
+
+.sponsors {
+  margin-top: 1rem;
 }
 </style>
