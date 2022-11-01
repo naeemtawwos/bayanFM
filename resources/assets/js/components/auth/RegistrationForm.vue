@@ -3,9 +3,13 @@
     <div class="logo">
       <img alt="Koel's logo" src="@/../img/logo.svg" width="156">
     </div>
+
     <input v-model="newUser.name" autofocus placeholder="User Name" required >
+    <p class="error" v-if="nameerror">{{nameerror}}</p>
     <input v-model="newUser.email" autofocus placeholder="Email Address" required type="email">
+    <p class="error" v-if="emailerror">{{emailerror}}</p>
     <input v-model="newUser.password" placeholder="Password" required type="password">
+    <p class="error" v-if="passworderror">{{passworderror}}</p>
     <input v-model="newUser.password_confirmation" placeholder="Confirm Password" required type="password">
     <Btn type="submit">Register</Btn>
     <Btn @click="$emit('showLogin')" green>Sign-in</Btn>
@@ -22,15 +26,18 @@ import Btn from '@/components/ui/Btn.vue'
 
 
 
-const url = ref('')
-const email = ''
-const password = ''
+// const url = ref('')
+// const email = ''
+// const password = ''
 const failed = ref(false)
-const username= ''
-const password_confirmation = ''
+// const username= ''
+// const password_confirmation = ''
 const emit = defineEmits(['loggedin', 'showLogin'])
 const dialog = requireInjection(DialogBoxKey)
-
+let nameerror = ref('')
+let emailerror = ref('')
+let passworderror = ref('')
+let errors = [];
 const emptyUserData: RegisterUserData = {
   name: '',
   email: '',
@@ -44,6 +51,7 @@ const newUser = reactive<RegisterUserData>(Object.assign({}, emptyUserData))
 const register = async () => {
 
   try {
+
     await userStore.register(newUser)
     failed.value =false
     emit('loggedin')
@@ -51,7 +59,13 @@ const register = async () => {
   } catch (err: any) {
     failed.value = true
     const msg = err.response.status === 422 ? parseValidationError(err.response.data)[0] : 'Unknown error.'
-    dialog.value.error(msg, 'Error')
+    if(err.response.status === 422) {
+      emailerror.value = err.response.data.errors.email ? err.response.data.errors.email.join() : ''
+      passworderror.value = err.response.data.errors.password ? err.response.data.errors.password.join() : ''
+      nameerror.value = err.response.data.errors.name ? err.response.data.errors.name.join() : ''
+    }
+    console.log(err.response.data.errors)
+
   }
 }
 </script>
@@ -100,6 +114,10 @@ form {
 
   .logo {
     text-align: center;
+  }
+
+  .error{
+    color: pink;
   }
 
   @media only screen and (max-width: 414px) {
