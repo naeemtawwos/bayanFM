@@ -1,11 +1,15 @@
 <template>
   <form :class="{ error: failed }" data-testid="login-form" @submit.prevent="register">
-
+    <div class="logo">
+      <img alt="Koel's logo" src="@/../img/logo.svg" width="156">
+    </div>
     <input v-model="newUser.name" autofocus placeholder="User Name" required >
     <input v-model="newUser.email" autofocus placeholder="Email Address" required type="email">
     <input v-model="newUser.password" placeholder="Password" required type="password">
     <input v-model="newUser.password_confirmation" placeholder="Confirm Password" required type="password">
     <Btn type="submit">Register</Btn>
+    <Btn @click="$emit('showLogin')" green>Sign-in</Btn>
+
   </form>
 </template>
 
@@ -24,7 +28,7 @@ const password = ''
 const failed = ref(false)
 const username= ''
 const password_confirmation = ''
-const emit = defineEmits(['loggedin'])
+const emit = defineEmits(['loggedin', 'showLogin'])
 const dialog = requireInjection(DialogBoxKey)
 
 const emptyUserData: RegisterUserData = {

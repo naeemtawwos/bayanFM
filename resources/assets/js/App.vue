@@ -20,13 +20,14 @@
   </div>
 
   <div v-else class="login-wrapper">
-    <LoginForm @loggedin="onUserLoggedIn"/>
-    <!-- <div class="or">
-      or
-    </div> -->
-    <Btn @click="showRegister">Create an Account</Btn>
+    <div v-if="showlogin">
+      <LoginForm @loggedin="onUserLoggedIn" @showRegister="showRegister" v-if="showlogin"/>
+    </div>
 
-    <RegistrationForm @loggedin="onUserLoggedIn"/>
+    <div v-if="showregister">
+      <RegistrationForm @loggedin="onUserLoggedIn" @showLogin="showLogin"/>
+
+    </div>
   </div>
 </template>
 
@@ -68,7 +69,8 @@ const toaster = ref<InstanceType<typeof MessageToaster>>()
 const currentSong = ref<Song | null>(null)
 const authenticated = ref(false)
 const showDropZone = ref(false)
-
+const showlogin = ref(true)
+const showregister = ref(false)
 const { offline } = useNetworkStatus()
 
 /**
@@ -87,7 +89,13 @@ const onUserLoggedIn = async () => {
 
 
 function showRegister(){
-  alert('show register');
+  showlogin.value = false
+  showregister.value = true
+}
+
+function showLogin(){
+  showregister.value = false
+  showlogin.value = true
 }
 
 onMounted(async () => {
@@ -200,11 +208,10 @@ provide(CurrentSongKey, currentSong)
   padding-bottom: 0;
 }
 
-.or {
-    text-align: center;
-    text-transform: uppercase;
-    margin: 20px 0;
 
-  }
+.btn{
+  margin: 0px 24%;
+  width: 50%;
 
+}
 </style>

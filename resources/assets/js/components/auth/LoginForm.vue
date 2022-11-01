@@ -6,10 +6,13 @@
     <input v-model="email" autofocus placeholder="Email Address" required type="email">
     <input v-model="password" placeholder="Password" required type="password">
     <Btn type="submit">Log In</Btn>
+    <Btn @click="$emit('showRegister')" green>Create an Account</Btn>
+
   </form>
 </template>
 
 <script lang="ts" setup>
+
 import { ref } from 'vue'
 import { userStore } from '@/stores'
 import { isDemo } from '@/utils'
@@ -26,9 +29,10 @@ const email = ref(isDemo() ? DEMO_ACCOUNT.email : '')
 const password = ref(isDemo() ? DEMO_ACCOUNT.password : '')
 const failed = ref(false)
 
-const emit = defineEmits(['loggedin'])
+const emit = defineEmits(['loggedin','showRegister'])
 
 const login = async () => {
+
   try {
     await userStore.login(email.value, password.value)
     failed.value = false
@@ -38,6 +42,7 @@ const login = async () => {
 
     emit('loggedin')
   } catch (err) {
+
     failed.value = true
     window.setTimeout(() => (failed.value = false), 2000)
   }
