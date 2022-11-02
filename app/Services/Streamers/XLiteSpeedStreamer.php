@@ -5,7 +5,7 @@ namespace App\Services\Streamers;
 class XLiteSpeedStreamer extends Streamer implements DirectStreamerInterface
 {
     /**
-     * Stream the current song using Apache's x_sendfile module.
+     * Stream the current song using Lite Speed's X-LiteSpeed-Location directive.
      */
     public function stream(): void
     {
