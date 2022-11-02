@@ -26,6 +26,14 @@
         Shuffle
       </a>
       <a
+        :title="`Share ${album.name}`"
+        href
+
+
+      >
+        Share
+      </a>
+      <a
         v-if="allowDownload"
         :title="`Download all audios in the album ${album.name}`"
         class="download-album"

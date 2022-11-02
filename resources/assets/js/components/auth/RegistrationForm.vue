@@ -3,11 +3,11 @@
     :class="{ error: failed }"
     data-testid="login-form"
     @submit.prevent="register"
-  >
+    v-if="registration_enabled" >
     <div class="logo">
       <img alt="Koel's logo" src="@/../img/logo.svg" width="156" />
     </div>
-    <div v-if="registration_enabled">
+
       <input
         v-model="newUser.name"
         autofocus
@@ -37,12 +37,15 @@
         type="password"
       />
       <Btn type="submit">Register</Btn>
-    </div>
-    <div v-else>
-      This instance does not allow registration. Please Sign-In.
-    </div>
+
+
     <Btn @click="$emit('showLogin')" green>Sign-in</Btn>
   </form>
+  <div v-else>
+      <h1>This instance does not allow registration. Please Sign-In.</h1>
+      <Btn @click="$emit('showLogin')" green>Sign-in</Btn>
+  </div>
+
 </template>
 
 <script lang="ts" setup>
@@ -55,6 +58,7 @@ import Btn from "@/components/ui/Btn.vue";
 let registration_enabled = ref(
   parseInt(import.meta.env.VITE_ALLOW_REGISTRATION)
 );
+
 const failed = ref(false);
 const emit = defineEmits(["loggedin", "showLogin"]);
 const dialog = requireInjection(DialogBoxKey);

@@ -36,6 +36,10 @@ Route::prefix('api')->middleware('api')->group(static function (): void {
     Route::post('register', [AuthController::class, 'register'])->name('auth.register');
     Route::delete('me', [AuthController::class, 'logout']);
 
+    Route::post('/forgot-password', [AuthController::class,'forgotPassword'])
+        // ->middleware('guest')
+        ->name('password.reset');
+
     Route::get('ping', static fn () => null);
 
     Route::middleware('auth')->group(static function (): void {

@@ -11,9 +11,12 @@ use App\Services\TokenManager;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Hashing\HashManager;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
+
+
 
 class AuthController extends Controller
 {
@@ -72,5 +75,22 @@ class AuthController extends Controller
             return response()->json([
                 'token' => $this->tokenManager->createToken($user)->plainTextToken,
             ]);
+    }
+
+    public function forgotPassword(Request $request){
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status;
+
+        // $status === Password::RESET_LINK_SENT
+        //     ? back()->with(['status' => __($status)])
+        //     : back()->withErrors(['email' => __($status)]);
+        // return response()->json($status);
+
+
     }
 }
