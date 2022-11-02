@@ -11,6 +11,7 @@ use App\Services\Streamers\TranscodingStreamerInterface;
 use App\Services\Streamers\XAccelRedirectStreamer;
 use App\Services\Streamers\XLiteSpeedStreamer;
 use App\Services\Streamers\XSendFileStreamer;
+use App\Services\Streamers\XLiteSpeedStreamer;
 use Illuminate\Support\ServiceProvider;
 
 class StreamerServiceProvider extends ServiceProvider
