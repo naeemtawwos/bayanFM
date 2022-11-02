@@ -8,6 +8,7 @@ use App\Services\Streamers\PhpStreamer;
 use App\Services\Streamers\S3Streamer;
 use App\Services\Streamers\TranscodingStreamer;
 use App\Services\Streamers\XAccelRedirectStreamer;
+use App\Services\Streamers\XLiteSpeedStreamer;
 use App\Services\Streamers\XSendFileStreamer;
 use App\Services\TranscodingService;
 use Mockery;
@@ -69,6 +70,7 @@ class StreamerFactoryTest extends TestCase
             [null, PhpStreamer::class],
             ['x-sendfile', XSendFileStreamer::class],
             ['x-accel-redirect', XAccelRedirectStreamer::class],
+            ['x-litespeed', XLiteSpeedStreamer::class],
         ];
     }
 

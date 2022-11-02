@@ -10,10 +10,9 @@ use App\Services\TokenManager;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Hashing\HashManager;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
-
 
 class AuthController extends Controller
 {
@@ -49,10 +48,11 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
-    public function register(Request $request){
+    public function register(Request $request)
+    {
             $validated = $request->validate([
                 'name' => ['required','min:3'],
-                'email' => ['required','email', Rule::unique('users','email')],
+                'email' => ['required','email', Rule::unique('users', 'email')],
                 'password' => ['required','min:6', 'confirmed'],
                 // 'password_confirmation' => ['required'],
             ]);
@@ -66,7 +66,5 @@ class AuthController extends Controller
             return response()->json([
                 'token' => $this->tokenManager->createToken($user)->plainTextToken,
             ]);
-
-        }
-
+    }
 }
