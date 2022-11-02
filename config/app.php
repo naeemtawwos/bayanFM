@@ -30,7 +30,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'http://bayan.islamqatamil.com'),
 
     /*
     |--------------------------------------------------------------------------

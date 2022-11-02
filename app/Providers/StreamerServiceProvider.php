@@ -10,6 +10,7 @@ use App\Services\Streamers\TranscodingStreamer;
 use App\Services\Streamers\TranscodingStreamerInterface;
 use App\Services\Streamers\XAccelRedirectStreamer;
 use App\Services\Streamers\XSendFileStreamer;
+use App\Services\Streamers\XLiteSpeedStreamer;
 use Illuminate\Support\ServiceProvider;
 
 class StreamerServiceProvider extends ServiceProvider
@@ -20,6 +21,7 @@ class StreamerServiceProvider extends ServiceProvider
             return match (config('koel.streaming.method')) {
                 'x-sendfile' => new XSendFileStreamer(),
                 'x-accel-redirect' => new XAccelRedirectStreamer(),
+                'x-litespeed' => new XLiteSpeedStreamer(),
                 default => new PhpStreamer(),
             };
         });
