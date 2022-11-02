@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use Exception;
 use App\Http\Requests\API\UserLoginRequest;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -50,6 +51,11 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+
+
+            if(env('VITE_ALLOW_REGISTRATION') === "0"){
+                throw new Exception("This instance does not allow registration", 403);
+            }
             $validated = $request->validate([
                 'name' => ['required','min:3'],
                 'email' => ['required','email', Rule::unique('users', 'email')],

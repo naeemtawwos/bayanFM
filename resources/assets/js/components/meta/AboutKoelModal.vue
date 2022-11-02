@@ -19,20 +19,10 @@
 
       <p class="author">
         Made with ❤️ by
-        <a href="https://github.com/phanan" rel="noopener" target="_blank">Phan An</a>
-        and quite a few
-        <a href="https://github.com/koel/core/graphs/contributors" rel="noopener" target="_blank">awesome</a>
-        <a href="https://github.com/koel/koel/graphs/contributors" rel="noopener" target="_blank">contributors</a>.
+        <a href="https://github.com/naeemtawwos" rel="noopener" target="_blank">Naeem</a>.
+
       </p>
 
-      <div v-if="isDemo" class="credit-wrapper" data-testid="demo-credits">
-        Music by
-        <ul class="credits">
-          <li v-for="credit in credits" :key="credit.name">
-            <a :href="credit.url" target="_blank">{{ credit.name }}</a>
-          </li>
-        </ul>
-      </div>
 
       <SponsorList/>
 

@@ -6,16 +6,20 @@
     <input v-model="email" autofocus placeholder="Email Address" required type="email">
     <input v-model="password" placeholder="Password" required type="password">
     <Btn type="submit">Log In</Btn>
-    <Btn @click="$emit('showRegister')" green>Create an Account</Btn>
+
+    <Btn @click="$emit('showRegister')" green v-if="registration_enabled">Create an Account</Btn>
 
   </form>
 </template>
 
 <script lang="ts" setup>
 
+let registration_enabled = ref(parseInt(import.meta.env.VITE_ALLOW_REGISTRATION))
+
 import { ref } from 'vue'
 import { userStore } from '@/stores'
 import { isDemo } from '@/utils'
+
 
 import Btn from '@/components/ui/Btn.vue'
 
