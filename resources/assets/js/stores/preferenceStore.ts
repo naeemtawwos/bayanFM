@@ -1,5 +1,4 @@
 import { reactive, ref } from 'vue'
-import { userStore } from '@/stores'
 import { localStorageService } from '@/services'
 
 interface Preferences extends Record<string, any> {
@@ -10,12 +9,12 @@ interface Preferences extends Record<string, any> {
   equalizer: EqualizerPreset,
   artistsViewMode: ArtistAlbumViewMode | null,
   albumsViewMode: ArtistAlbumViewMode | null,
-  selectedPreset: number
   transcodeOnMobile: boolean
   supportBarNoBugging: boolean
   showAlbumArtOverlay: boolean
   lyricsZoomLevel: number | null
   theme?: Theme['id'] | null
+  visualizer?: Visualizer['id'] | null
 }
 
 const preferenceStore = {
@@ -28,22 +27,23 @@ const preferenceStore = {
     repeatMode: 'NO_REPEAT',
     confirmClosing: false,
     equalizer: {
+      id: 0,
+      name: 'Default',
       preamp: 0,
       gains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     },
     artistsViewMode: null,
     albumsViewMode: null,
-    selectedPreset: -1,
     transcodeOnMobile: false,
     supportBarNoBugging: false,
     showAlbumArtOverlay: true,
     lyricsZoomLevel: 1,
-    theme: null
+    theme: null,
+    visualizer: 'default'
   }),
 
-  init (user?: User): void {
-    const initUser = user || userStore.current
-    this.storeKey = `preferences_${initUser.id}`
+  init (user: User): void {
+    this.storeKey = `preferences_${user.id}`
     Object.assign(this.state, localStorageService.get(this.storeKey, this.state))
     this.setupProxy()
 
@@ -69,7 +69,7 @@ const preferenceStore = {
   },
 
   get (key: string) {
-    return key in this.state ? this.state[key] : null
+    return this.state?.[key]
   },
 
   save () {
@@ -77,6 +77,6 @@ const preferenceStore = {
   }
 }
 
-const exportedPreferenceStore = preferenceStore as unknown as Omit<typeof preferenceStore, 'setupProxy'> & Preferences
+const exported = preferenceStore as unknown as Omit<typeof preferenceStore, 'setupProxy'> & Preferences
 
-export { exportedPreferenceStore as preferenceStore }
+export { exported as preferenceStore }

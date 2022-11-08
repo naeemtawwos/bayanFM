@@ -1,29 +1,24 @@
 <template>
   <div class="extra-controls" data-testid="other-controls">
-    <div v-koel-clickaway="closeEqualizer" class="wrapper">
-      <Equalizer v-if="useEqualizer" v-show="showEqualizer"/>
-
-      <button
-        v-if="song?.playback_state === 'Playing'"
+    <div class="wrapper">
+      <a
         v-koel-tooltip.top
         class="visualizer-btn"
         data-testid="toggle-visualizer-btn"
-        title="Toggle the visualizer"
-        type="button"
-        @click.prevent="toggleVisualizer"
+        href="/#/visualizer"
+        title="Show the visualizer"
       >
         <icon :icon="faBolt"/>
-      </button>
+      </a>
 
       <button
         v-if="useEqualizer"
         v-koel-tooltip.top
         :class="{ active: showEqualizer }"
-        :title="`${ showEqualizer ? 'Hide' : 'Show'} equalizer`"
         class="equalizer"
-        data-testid="toggle-equalizer-btn"
+        title="Show equalizer"
         type="button"
-        @click.prevent="toggleEqualizer"
+        @click.prevent="showEqualizer"
       >
         <icon :icon="faSliders"/>
       </button>
@@ -39,16 +34,11 @@ import { ref } from 'vue'
 import { eventBus, isAudioContextSupported as useEqualizer, requireInjection } from '@/utils'
 import { CurrentSongKey } from '@/symbols'
 
-import Equalizer from '@/components/ui/Equalizer.vue'
 import Volume from '@/components/ui/Volume.vue'
 
 const song = requireInjection(CurrentSongKey, ref(null))
 
-const showEqualizer = ref(false)
-
-const toggleEqualizer = () => (showEqualizer.value = !showEqualizer.value)
-const closeEqualizer = () => (showEqualizer.value = false)
-const toggleVisualizer = () => eventBus.emit('TOGGLE_VISUALIZER')
+const showEqualizer = () => eventBus.emit('MODAL_SHOW_EQUALIZER')
 </script>
 
 <style lang="scss" scoped>
