@@ -10,7 +10,6 @@
   >
     <div :class="config.sortable ? 'sortable' : 'unsortable'" class="song-list-header">
       <span
-        v-if="config.columns.includes('track')"
         class="track-number"
         data-testid="header-track-number"
         role="button"
@@ -18,35 +17,25 @@
         @click="sort('track')"
       >
         #
-        <icon v-if="sortField === 'track' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
-        <icon v-if="sortField === 'track' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        <template v-if="config.sortable">
+          <icon v-if="sortField === 'track' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+          <icon v-if="sortField === 'track' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        </template>
       </span>
       <span
-        v-if="config.columns.includes('title')"
-        class="title"
+        class="title-artist"
         data-testid="header-title"
         role="button"
         title="Sort by title"
         @click="sort('title')"
       >
         Title
-        <icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
-        <icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        <template v-if="config.sortable">
+          <icon v-if="sortField === 'title' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+          <icon v-if="sortField === 'title' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        </template>
       </span>
       <span
-        v-if="config.columns.includes('artist')"
-        class="artist"
-        data-testid="header-artist"
-        role="button"
-        title="Sort by artist"
-        @click="sort('artist_name')"
-      >
-        Artist
-        <icon v-if="sortField === 'artist_name' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
-        <icon v-if="sortField === 'artist_name' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
-      </span>
-      <span
-        v-if="config.columns.includes('album')"
         class="album"
         data-testid="header-album"
         role="button"
@@ -54,11 +43,12 @@
         @click="sort('album_name')"
       >
         Album
-        <icon v-if="sortField === 'album_name' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
-        <icon v-if="sortField === 'album_name' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        <template v-if="config.sortable">
+          <icon v-if="sortField === 'album_name' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+          <icon v-if="sortField === 'album_name' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        </template>
       </span>
       <span
-        v-if="config.columns.includes('length')"
         class="time"
         data-testid="header-length"
         role="button"
@@ -66,10 +56,14 @@
         @click="sort('length')"
       >
         Time
-        <icon v-if="sortField === 'length' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
-        <icon v-if="sortField === 'length' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        <template v-if="config.sortable">
+          <icon v-if="sortField === 'length' && sortOrder === 'asc'" :icon="faCaretDown" class="text-highlight"/>
+          <icon v-if="sortField === 'length' && sortOrder === 'desc'" :icon="faCaretUp" class="text-highlight"/>
+        </template>
       </span>
-      <span class="favorite"></span>
+      <span class="extra">
+        <SongListSorter v-if="config.sortable" :field="sortField" :order="sortOrder" @sort="sort"/>
+      </span>
     </div>
 
     <VirtualScroller
@@ -81,7 +75,6 @@
     >
       <SongListItem
         :key="item.song.id"
-        :columns="config.columns"
         :item="item"
         draggable="true"
         @click="rowClicked(item, $event)"
@@ -90,6 +83,7 @@
         @dragenter.prevent="onDragEnter"
         @dragover.prevent
         @drop.prevent="onDrop(item, $event)"
+        @dragend.prevent="onDragEnd"
         @contextmenu.prevent="openContextMenu(item, $event)"
       />
     </VirtualScroller>
@@ -100,47 +94,39 @@
 import { findIndex } from 'lodash'
 import isMobile from 'ismobilejs'
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons'
-import { computed, nextTick, onMounted, Ref, ref, watch } from 'vue'
+import { nextTick, onMounted, Ref, ref, watch } from 'vue'
 import { eventBus, requireInjection } from '@/utils'
 import { useDraggable, useDroppable } from '@/composables'
-import {
-  ScreenNameKey,
-  SelectedSongsKey,
-  SongListConfigKey,
-  SongListSortFieldKey,
-  SongListSortOrderKey,
-  SongsKey
-} from '@/symbols'
+import { SelectedSongsKey, SongListConfigKey, SongListSortFieldKey, SongListSortOrderKey, SongsKey } from '@/symbols'
 
 import VirtualScroller from '@/components/ui/VirtualScroller.vue'
 import SongListItem from '@/components/song/SongListItem.vue'
+import SongListSorter from '@/components/song/SongListSorter.vue'
 
 const { startDragging } = useDraggable('songs')
 const { getDroppedData, acceptsDrop } = useDroppable(['songs'])
 
-const emit = defineEmits(['press:enter', 'press:delete', 'reorder', 'sort', 'scroll-breakpoint', 'scrolled-to-end'])
+const emit = defineEmits<{
+  (e: 'press:enter', event: KeyboardEvent): void,
+  (e: 'press:delete'): void,
+  (e: 'reorder', song: Song): void,
+  (e: 'sort', field: SongListSortField, order: SortOrder): void,
+  (e: 'scroll-breakpoint', direction: 'up' | 'down'): void,
+  (e: 'scrolled-to-end'): void,
+}>()
 
 const [items] = requireInjection<[Ref<Song[]>]>(SongsKey)
-const [screen] = requireInjection<[ScreenName]>(ScreenNameKey)
 const [selectedSongs, setSelectedSongs] = requireInjection<[Ref<Song[]>, Closure]>(SelectedSongsKey)
 const [sortField, setSortField] = requireInjection<[Ref<SongListSortField>, Closure]>(SongListSortFieldKey)
 const [sortOrder, setSortOrder] = requireInjection<[Ref<SortOrder>, Closure]>(SongListSortOrderKey)
-const [injectedConfig] = requireInjection<[Partial<SongListConfig>]>(SongListConfigKey, [{}])
+const [config] = requireInjection<[Partial<SongListConfig>]>(SongListConfigKey, [{}])
 
+const wrapper = ref<HTMLElement>()
 const lastSelectedRow = ref<SongRow>()
 const sortFields = ref<SongListSortField[]>([])
 const songRows = ref<SongRow[]>([])
 
-const allowReordering = screen === 'Queue'
-
 watch(songRows, () => setSelectedSongs(songRows.value.filter(row => row.selected).map(row => row.song)), { deep: true })
-
-const config = computed((): SongListConfig => {
-  return Object.assign({
-    sortable: true,
-    columns: ['track', 'thumbnail', 'title', 'artist', 'album', 'length']
-  }, injectedConfig)
-})
 
 let lastScrollTop = 0
 
@@ -166,7 +152,7 @@ const generateSongRows = () => {
   // selected songs manually.
   const selectedSongIds = selectedSongs.value.map(song => song.id)
 
-  return items.value.map(song => ({
+  return items.value.map<SongRow>(song => ({
     song,
     selected: selectedSongIds.includes(song.id)
   }))
@@ -174,7 +160,7 @@ const generateSongRows = () => {
 
 const sort = (field: SongListSortField) => {
   // there are certain circumstances where sorting is simply disallowed, e.g. in Queue
-  if (!config.value.sortable) {
+  if (!config.sortable) {
     return
   }
 
@@ -185,7 +171,7 @@ const sort = (field: SongListSortField) => {
 }
 
 const render = () => {
-  config.value.sortable || (sortFields.value = [])
+  config.sortable || (sortFields.value = [])
   songRows.value = generateSongRows()
 }
 
@@ -255,14 +241,18 @@ const onDragStart = (row: SongRow, event: DragEvent) => {
     row.selected = true
   }
 
+  // Add "dragging" class to the wrapper so that we can disable pointer events on child elements.
+  // This prevents dragleave events from firing when the user drags the mouse over the child elements.
+  wrapper.value.classList.add('dragging')
+
   startDragging(event, selectedSongs.value)
 }
 
 const onDragEnter = (event: DragEvent) => {
-  if (!allowReordering) return
+  if (!config.reorderable) return
 
   if (acceptsDrop(event)) {
-    (event.target as Element).parentElement?.classList.add('droppable')
+    (event.target as HTMLElement).closest('.song-item')?.classList.add('droppable')
     event.dataTransfer!.dropEffect = 'move'
   }
 
@@ -270,18 +260,23 @@ const onDragEnter = (event: DragEvent) => {
 }
 
 const onDrop = (item: SongRow, event: DragEvent) => {
-  if (!allowReordering || !getDroppedData(event) || !selectedSongs.value.length) {
+  if (!config.reorderable || !getDroppedData(event) || !selectedSongs.value.length) {
+    wrapper.value.classList.remove('dragging')
     return onDragLeave(event)
   }
+
+  wrapper.value.classList.remove('dragging')
 
   emit('reorder', item.song)
   return onDragLeave(event)
 }
 
 const onDragLeave = (event: DragEvent) => {
-  (event.target as Element).parentElement?.classList.remove('droppable')
+  (event.target as HTMLElement).closest('.song-item')?.classList.remove('droppable')
   return false
 }
+
+const onDragEnd = () => wrapper.value.classList.remove('dragging')
 
 const openContextMenu = async (row: SongRow, event: MouseEvent) => {
   if (!row.selected) {
@@ -315,13 +310,17 @@ onMounted(() => render())
 
   .song-list-header {
     background: var(--color-bg-secondary);
-    z-index: 1;
     display: flex;
+    z-index: 2; // fix stack-context related issue when e.g., footer would cover the sort context menu
   }
 
-  div.droppable {
-    border-bottom-width: 3px;
-    border-bottom-color: var(--color-green);
+  &.dragging .song-item * {
+    pointer-events: none;
+  }
+
+  .droppable {
+    position: relative;
+    box-shadow: 0 3px 0 var(--color-green);
   }
 
   .song-list-header > span, .song-item > span {
@@ -342,15 +341,11 @@ onMounted(() => render())
       padding-left: 24px;
     }
 
-    &.artist {
-      flex-basis: 20%;
-    }
-
     &.album {
       flex-basis: 27%;
     }
 
-    &.favorite {
+    &.extra {
       flex-basis: 36px;
     }
 
@@ -362,8 +357,12 @@ onMounted(() => render())
       }
     }
 
-    &.title {
+    &.title-artist {
       flex: 1;
+    }
+
+    &.extra {
+      text-align: center;
     }
   }
 
@@ -373,9 +372,9 @@ onMounted(() => render())
     text-transform: uppercase;
     cursor: pointer;
 
-    i:not(.duration-header) {
-      color: var(--color-highlight);
-      font-size: 1.2rem;
+    .extra {
+      padding-left: 0;
+      padding-right: 0;
     }
   }
 
@@ -406,10 +405,6 @@ onMounted(() => render())
   }
 
   @media only screen and (max-width: 768px) {
-    .song-list-header {
-      display: none;
-    }
-
     .scroller {
       top: 0;
 
@@ -426,29 +421,21 @@ onMounted(() => render())
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: var(--color-text-secondary);
       width: 200%;
     }
 
-    .song-item span {
+    .song-item :is(.track-number, .album, .time),
+    .song-list-header :is(.track-number, .album, .time) {
       display: none;
+    }
+
+    .song-item span {
       padding: 0;
       vertical-align: bottom;
-      color: var(--color-text-primary);
 
       &.thumbnail {
         display: block;
         padding-right: 12px;
-      }
-
-      &.artist, &.title {
-        display: inline;
-      }
-
-      &.artist {
-        color: var(--color-text-secondary);
-        font-size: 0.9rem;
-        padding: 0 4px;
       }
     }
   }
