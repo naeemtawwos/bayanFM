@@ -12,11 +12,8 @@
 import { useContextMenu } from '@/composables'
 import { eventBus } from '@/utils'
 import { EventName } from '@/config'
-import { onMounted } from 'vue'
 
 const { base, ContextMenuBase, open, trigger } = useContextMenu()
-
-const emit = defineEmits(['itemClicked'])
 
 const actionToEventMap: Record<string, EventName> = {
   'new-playlist': 'MODAL_SHOW_CREATE_PLAYLIST_FORM',
@@ -26,9 +23,5 @@ const actionToEventMap: Record<string, EventName> = {
 
 const onItemClicked = (key: keyof typeof actionToEventMap) => trigger(() => eventBus.emit(actionToEventMap[key]))
 
-onMounted(() => {
-  eventBus.on('CREATE_NEW_PLAYLIST_CONTEXT_MENU_REQUESTED', async (e: MouseEvent) => {
-    await open(e.pageY, e.pageX)
-  })
-})
+eventBus.on('CREATE_NEW_PLAYLIST_CONTEXT_MENU_REQUESTED', async e => await open(e.pageY, e.pageX))
 </script>

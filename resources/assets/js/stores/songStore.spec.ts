@@ -3,7 +3,7 @@ import isMobile from 'ismobilejs'
 import UnitTestCase from '@/__tests__/UnitTestCase'
 import { expect, it } from 'vitest'
 import factory from '@/__tests__/factory'
-import { authService, http } from '@/services'
+import { authService, cache, http } from '@/services'
 import { albumStore, artistStore, commonStore, overviewStore, preferenceStore, songStore, SongUpdateResult } from '.'
 
 new class extends UnitTestCase {
@@ -147,13 +147,13 @@ new class extends UnitTestCase {
     it('gets source URL', () => {
       commonStore.state.cdn_url = 'http://test/'
       const song = factory<Song>('song', { id: 'foo' })
-      this.mock(authService, 'getToken', 'hadouken')
+      this.mock(authService, 'getAudioToken', 'hadouken')
 
-      expect(songStore.getSourceUrl(song)).toBe('http://test/play/foo?api_token=hadouken')
+      expect(songStore.getSourceUrl(song)).toBe('http://test/play/foo?t=hadouken')
 
       isMobile.any = true
       preferenceStore.transcodeOnMobile = true
-      expect(songStore.getSourceUrl(song)).toBe('http://test/play/foo/1/128?api_token=hadouken')
+      expect(songStore.getSourceUrl(song)).toBe('http://test/play/foo/1/128?t=hadouken')
     })
 
     it('gets shareable URL', () => {
@@ -226,10 +226,37 @@ new class extends UnitTestCase {
       const getMock = this.mock(http, 'get').mockResolvedValueOnce(songs)
       const syncMock = this.mock(songStore, 'syncWithVault', songs)
 
-      await songStore.fetchForPlaylist(playlist)
+      const fetched = await songStore.fetchForPlaylist(playlist)
 
       expect(getMock).toHaveBeenCalledWith('playlists/42/songs')
       expect(syncMock).toHaveBeenCalledWith(songs)
+      expect(fetched).toEqual(songs)
+    })
+
+    it('fetches for playlist with cache', async () => {
+      const songs = factory<Song>('song', 3)
+      const playlist = factory<Playlist>('playlist', { id: 42 })
+      cache.set(['playlist.songs', playlist.id], songs)
+
+      const getMock = this.mock(http, 'get')
+
+      const fetched = await songStore.fetchForPlaylist(playlist)
+
+      expect(getMock).not.toHaveBeenCalled()
+      expect(fetched).toEqual(songs)
+    })
+
+    it('fetches for playlist discarding cache', async () => {
+      const songs = factory<Song>('song', 3)
+      const playlist = factory<Playlist>('playlist', { id: 42 })
+      cache.set(['playlist.songs', playlist.id], songs)
+
+      const getMock = this.mock(http, 'get').mockResolvedValueOnce([])
+
+      await songStore.fetchForPlaylist(playlist, true)
+
+      expect(getMock).toHaveBeenCalled()
+      expect(cache.get(['playlist.songs', playlist.id])).toEqual([])
     })
 
     it('paginates', async () => {

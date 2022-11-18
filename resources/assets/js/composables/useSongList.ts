@@ -7,7 +7,6 @@ import { eventBus, provideReadonly, requireInjection } from '@/utils'
 
 import {
   RouterKey,
-  ScreenNameKey,
   SelectedSongsKey,
   SongListConfigKey,
   SongListSortFieldKey,
@@ -20,8 +19,14 @@ import SongList from '@/components/song/SongList.vue'
 import SongListControls from '@/components/song/SongListControls.vue'
 import ThumbnailStack from '@/components/ui/ThumbnailStack.vue'
 
-export const useSongList = (songs: Ref<Song[]>, screen: ScreenName, config: Partial<SongListConfig> = {}) => {
+export const useSongList = (songs: Ref<Song[]>, config: Partial<SongListConfig> = {}) => {
+  config = reactive(config)
   const router = requireInjection(RouterKey)
+
+  router.onRouteChanged(route => {
+    config.reorderable = route.screen === 'Queue'
+    config.sortable = !['Queue', 'RecentlyPlayed', 'Search.Songs'].includes(route.screen)
+  })
 
   const songList = ref<InstanceType<typeof SongList>>()
 
@@ -72,14 +77,16 @@ export const useSongList = (songs: Ref<Song[]>, screen: ScreenName, config: Part
   }
 
   const sortField = ref<SongListSortField | null>(((): SongListSortField | null => {
-    if (screen === 'Album' || screen === 'Artist') return 'track'
-    if (screen === 'Search.Songs') return null
-    return config.sortable ? 'title' : null
+    if (!config.sortable) return null
+    if (router.$currentRoute.value.screen === 'Album' || router.$currentRoute.value.screen === 'Artist') return 'track'
+    if (router.$currentRoute.value.screen === 'Search.Songs') return null
+    return 'title'
   })())
 
   const sortOrder = ref<SortOrder>('asc')
 
   const sort = (by: SongListSortField | null = sortField.value, order: SortOrder = sortOrder.value) => {
+    if (!config.sortable) return
     if (!by) return
 
     sortField.value = by
@@ -98,14 +105,11 @@ export const useSongList = (songs: Ref<Song[]>, screen: ScreenName, config: Part
     songs.value = orderBy(songs.value, sortFields, order)
   }
 
-  eventBus.on('SONGS_DELETED', (deletedSongs: Song[]) => {
-    songs.value = differenceBy(songs.value, deletedSongs, 'id')
-  })
+  eventBus.on('SONGS_DELETED', deletedSongs => (songs.value = differenceBy(songs.value, deletedSongs, 'id')))
 
-  provideReadonly(ScreenNameKey, screen)
   provideReadonly(SongsKey, songs, false)
   provideReadonly(SelectedSongsKey, selectedSongs, false)
-  provideReadonly(SongListConfigKey, reactive(config))
+  provideReadonly(SongListConfigKey, config)
   provideReadonly(SongListSortFieldKey, sortField)
   provideReadonly(SongListSortOrderKey, sortOrder)
 

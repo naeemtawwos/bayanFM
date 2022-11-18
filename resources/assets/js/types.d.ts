@@ -162,7 +162,7 @@ interface SmartPlaylistRuleGroup {
 }
 
 interface SmartPlaylistModel {
-  name: 'title' | 'length' | 'created_at' | 'updated_at' | 'album.name' | 'artist.name' | 'interactions.play_count' | 'interactions.updated_at' | 'genre' | 'year'
+  name: 'title' | 'length' | 'created_at' | 'updated_at' | 'album.name' | 'artist.name' | 'interactions.play_count' | 'interactions.last_played_at' | 'genre' | 'year'
   type: 'text' | 'number' | 'date'
   label: string
   unit?: 'seconds' | 'days'
@@ -324,6 +324,7 @@ interface SongListControlsConfig {
   addTo: AddToMenuConfig
   clearQueue: boolean
   deletePlaylist: boolean
+  refresh: boolean
 }
 
 type ThemeableProperty = '--color-text-primary'
@@ -349,11 +350,9 @@ type ArtistAlbumViewMode = 'list' | 'thumbnails'
 
 type RepeatMode = 'NO_REPEAT' | 'REPEAT_ALL' | 'REPEAT_ONE'
 
-type SongListColumn = 'track' | 'thumbnail' | 'title' | 'album' | 'artist' | 'length'
-
 interface SongListConfig {
   sortable: boolean
-  columns: SongListColumn[]
+  reorderable: boolean
 }
 
 type SongListSortField = keyof Pick<Song, 'track' | 'disc' | 'title' | 'album_name' | 'length' | 'artist_name'>

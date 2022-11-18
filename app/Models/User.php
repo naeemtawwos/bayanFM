@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * @property UserPreferences $preferences
@@ -24,6 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read string $avatar
  * @property Collection|array<array-key, Playlist> $playlists
  * @property Collection|array<array-key, PlaylistFolder> $playlist_folders
+ * @property PersonalAccessToken $currentAccessToken
  */
 class User extends Authenticatable
 {

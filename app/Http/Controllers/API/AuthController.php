@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Hashing\HashManager;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
@@ -40,14 +41,19 @@ class AuthController extends Controller
             abort(Response::HTTP_UNAUTHORIZED, 'Invalid credentials');
         }
 
+        $token = $this->tokenManager->createCompositionToken($user);
+
         return response()->json([
-            'token' => $this->tokenManager->createToken($user)->plainTextToken,
+            'token' => $token->apiToken,
+            'audio-token' => $token->audioToken,
         ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        $this->user?->currentAccessToken()->delete(); // @phpstan-ignore-line
+        if ($this->user) {
+            attempt(fn () => $this->tokenManager->deleteCompositionToken($request->bearerToken()));
+        }
 
         return response()->noContent();
     }
