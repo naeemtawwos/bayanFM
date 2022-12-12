@@ -13,7 +13,6 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Hashing\HashManager;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
