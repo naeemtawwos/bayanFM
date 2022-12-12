@@ -8,14 +8,14 @@
     </h1>
 
     <main>
-      <ArtistThumbnail v-if="mode === 'aside'" :entity="artist"/>
+      <ArtistThumbnail v-if="mode === 'aside'" :entity="artist" />
 
       <template v-if="info">
         <div v-if="info.bio?.summary" class="bio">
-          <div v-if="showSummary" class="summary" data-testid="summary" v-html="info.bio.summary"/>
-          <div v-if="showFull" class="full" data-testid="full" v-html="info.bio.full"/>
+          <div v-if="showSummary" class="summary" data-testid="summary" v-html="info.bio.summary" />
+          <div v-if="showFull" class="full" data-testid="full" v-html="info.bio.full" />
 
-          <button v-if="showSummary" class="more" data-testid="more-btn" @click.prevent="showingFullBio = true">
+          <button v-if="showSummary" class="more" @click.prevent="showingFullBio = true">
             Full Bio
           </button>
         </div>
@@ -33,18 +33,15 @@
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons'
 import { computed, ref, toRefs, watch } from 'vue'
 import { mediaInfoService, playbackService } from '@/services'
-import { useThirdPartyServices } from '@/composables'
+import { useRouter, useThirdPartyServices } from '@/composables'
 import { songStore } from '@/stores'
-import { RouterKey } from '@/symbols'
-import { requireInjection } from '@/utils'
 
 import ArtistThumbnail from '@/components/ui/AlbumArtistThumbnail.vue'
-
-const router = requireInjection(RouterKey)
 
 const props = withDefaults(defineProps<{ artist: Artist, mode?: MediaInfoDisplayMode }>(), { mode: 'aside' })
 const { artist, mode } = toRefs(props)
 
+const { go } = useRouter()
 const { useLastfm } = useThirdPartyServices()
 
 const info = ref<ArtistInfo | null>(null)
@@ -61,7 +58,7 @@ const showFull = computed(() => !showSummary.value)
 
 const play = async () => {
   playbackService.queueAndPlay(await songStore.fetchForArtist(artist.value))
-  router.go('queue')
+  go('queue')
 }
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <div class="smart-playlist-form">
-    <slot/>
+    <slot />
   </div>
 </template>
 
@@ -10,6 +10,10 @@
 <style lang="scss" scoped>
 .smart-playlist-form {
   width: 560px;
+}
+
+:slotted(label.folder) {
+  flex: .6;
 }
 
 :slotted(.rules) {

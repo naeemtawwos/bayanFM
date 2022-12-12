@@ -4,18 +4,17 @@
       Things You Love
       <ControlsToggle v-model="showingControls"/>
 
-      <template v-slot:thumbnail>
-        <ThumbnailStack :thumbnails="thumbnails"/>
+      <template #thumbnail>
+        <ThumbnailStack :thumbnails="thumbnails" />
       </template>
 
-      <template v-slot:meta v-if="songs.length">
+      <template v-if="songs.length" #meta>
         <span>{{ pluralize(songs, 'song') }}</span>
         <span>{{ duration }}</span>
 
         <a
           v-if="allowDownload"
           class="download"
-          href
           role="button"
           title="Download all songs in playlist"
           @click.prevent="download"
@@ -24,16 +23,16 @@
         </a>
       </template>
 
-      <template v-slot:controls>
+      <template #controls>
         <SongListControls
           v-if="songs.length && (!isPhone || showingControls)"
-          @playAll="playAll"
-          @playSelected="playSelected"
+          @play-all="playAll"
+          @play-selected="playSelected"
         />
       </template>
     </ScreenHeader>
 
-    <SongListSkeleton v-if="loading"/>
+    <SongListSkeleton v-if="loading" />
     <SongList
       v-if="songs.length"
       ref="songList"
@@ -44,8 +43,8 @@
     />
 
     <ScreenEmptyState v-else>
-      <template v-slot:icon>
-        <icon :icon="faHeartBroken"/>
+      <template #icon>
+        <icon :icon="faHeartBroken" />
       </template>
       No favorites yet.
       <span class="secondary d-block">
@@ -63,7 +62,7 @@ import { faHeart } from '@fortawesome/free-regular-svg-icons'
 import { pluralize } from '@/utils'
 import { commonStore, favoriteStore } from '@/stores'
 import { downloadService } from '@/services'
-import { useScreen, useSongList } from '@/composables'
+import { useRouter, useSongList } from '@/composables'
 import { nextTick, ref, toRef } from 'vue'
 
 import ScreenHeader from '@/components/ui/ScreenHeader.vue'
@@ -106,7 +105,7 @@ const fetchSongs = async () => {
   sort()
 }
 
-useScreen('Favorites').onScreenActivated(async () => {
+useRouter().onScreenActivated('Favorites', async () => {
   if (!initialized) {
     initialized = true
     await fetchSongs()

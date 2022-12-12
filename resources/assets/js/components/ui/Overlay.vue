@@ -1,57 +1,57 @@
 <template>
-  <div v-if="state.showing" id="overlay" :class="state.type" class="overlay" data-testid="overlay">
-    <div class="display">
-      <SoundBars v-if="state.type === 'loading'"/>
-      <icon v-if="state.type === 'error'" :icon="faCircleExclamation"/>
-      <icon v-if="state.type === 'warning'" :icon="faWarning"/>
-      <icon v-if="state.type === 'info'" :icon="faCircleInfo"/>
-      <icon v-if="state.type === 'success'" :icon="faCircleCheck"/>
+  <dialog ref="el" :class="state.type" data-testid="overlay" @cancel.prevent="onCancel">
+    <div class="wrapper">
+      <SoundBars v-if="state.type === 'loading'" />
+      <icon v-if="state.type === 'error'" :icon="faCircleExclamation" />
+      <icon v-if="state.type === 'warning'" :icon="faWarning" />
+      <icon v-if="state.type === 'info'" :icon="faCircleInfo" />
+      <icon v-if="state.type === 'success'" :icon="faCircleCheck" />
 
-      <span class="message" v-html="state.message"/>
+      <span class="message" v-html="state.message" />
     </div>
-
-    <button v-if="state.dismissible" class="btn-dismiss" type="button" @click.prevent="hide">Close</button>
-  </div>
+  </dialog>
 </template>
 
 <script lang="ts" setup>
 import { faCircleCheck, faCircleExclamation, faCircleInfo, faWarning } from '@fortawesome/free-solid-svg-icons'
-import { eventBus } from '@/utils'
-import { defineAsyncComponent, reactive } from 'vue'
+import { defineAsyncComponent, reactive, ref } from 'vue'
 
 const SoundBars = defineAsyncComponent(() => import('@/components/ui/SoundBars.vue'))
 
+const el = ref<HTMLDialogElement>()
+
 const state = reactive<OverlayState>({
-  showing: false,
   dismissible: false,
   type: 'loading',
   message: ''
 })
 
-const show = (options: Partial<OverlayState>) => {
+const show = (options: Partial<OverlayState> = {}) => {
   Object.assign(state, options)
-  state.showing = true
+  el.value?.open || el.value?.showModal()
 }
 
-const hide = () => (state.showing = false)
+const hide = () => el.value?.close()
+const onCancel = () => state.dismissible && hide()
 
-eventBus.on('SHOW_OVERLAY', options => show(options))
-  .on('HIDE_OVERLAY', () => hide())
+defineExpose({ show, hide })
 </script>
 
-<style lang="scss">
-#overlay {
-  background-color: var(--color-bg-primary);
-  flex-direction: column;
+<style lang="scss" scoped>
+dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
 
-  .display {
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  .wrapper {
     display: flex;
     align-items: baseline;
     justify-content: center;
-
-    .message {
-      margin-left: 6px;
-    }
+    gap: 6px;
   }
 
   &.error {
@@ -71,7 +71,7 @@ eventBus.on('SHOW_OVERLAY', options => show(options))
   }
 
   &.warning {
-    color: var(--color-highlight);
+    color: var(--color-orange);
   }
 }
 </style>

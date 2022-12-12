@@ -1,20 +1,20 @@
 <template>
   <div class="playback-controls" data-testid="footer-middle-pane">
     <div class="buttons">
-      <LikeButton v-if="song" :song="song" class="like-btn"/>
-      <button type="button" v-else/> <!-- a placeholder to maintain the flex layout -->
+      <LikeButton v-if="song" :song="song" class="like-btn" />
+      <button v-else type="button" /> <!-- a placeholder to maintain the flex layout -->
 
       <button type="button" title="Play previous audio" @click.prevent="playPrev">
         <icon :icon="faStepBackward"/>
       </button>
 
-      <PlayButton/>
+      <PlayButton />
 
       <button type="button" title="Play next audio" @click.prevent="playNext">
         <icon :icon="faStepForward"/>
       </button>
 
-      <RepeatModeSwitch class="repeat-mode-btn"/>
+      <RepeatModeSwitch class="repeat-mode-btn" />
     </div>
   </div>
 </template>

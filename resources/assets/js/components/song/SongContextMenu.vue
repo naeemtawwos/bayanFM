@@ -18,37 +18,41 @@
         </template>
         <li v-else @click="queueSongsToBottom">Queue</li>
         <template v-if="!isFavoritesScreen">
-          <li class="separator"/>
+          <li class="separator" />
           <li @click="addSongsToFavorite">Favorites</li>
         </template>
-        <li v-if="normalPlaylists.length" class="separator"/>
-        <li v-for="p in normalPlaylists" :key="p.id" @click="addSongsToExistingPlaylist(p)">{{ p.name }}</li>
+        <li v-if="normalPlaylists.length" class="separator" />
+        <ul v-if="normalPlaylists.length" v-koel-overflow-fade class="playlists">
+          <li v-for="p in normalPlaylists" :key="p.id" @click="addSongsToExistingPlaylist(p)">{{ p.name }}</li>
+        </ul>
+        <li class="separator" />
+        <li @click="addSongsToNewPlaylist">New Playlist…</li>
       </ul>
     </li>
 
     <template v-if="isQueueScreen">
-      <li class="separator"/>
+      <li class="separator" />
       <li @click="removeFromQueue">Remove from Queue</li>
-      <li class="separator"/>
+      <li class="separator" />
     </template>
 
     <template v-if="isFavoritesScreen">
-      <li class="separator"/>
+      <li class="separator" />
       <li @click="removeFromFavorites">Remove from Favorites</li>
-      <li class="separator"/>
+      <li class="separator" />
     </template>
 
-    <li v-if="isAdmin" @click="openEditForm">Edit</li>
+    <li v-if="isAdmin" @click="openEditForm">Edit…</li>
     <li v-if="allowDownload" @click="download">Download</li>
     <li v-if="onlyOneSongSelected" @click="copyUrl">Copy Shareable URL</li>
 
     <template v-if="canBeRemovedFromPlaylist">
-      <li class="separator"/>
+      <li class="separator" />
       <li @click="removeFromPlaylist">Remove from Playlist</li>
     </template>
 
     <template v-if="isAdmin">
-      <li class="separator"/>
+      <li class="separator" />
       <li @click="deleteFromFilesystem">Delete from Filesystem</li>
     </template>
   </ContextMenuBase>
@@ -56,33 +60,39 @@
 
 <script lang="ts" setup>
 import { computed, ref, toRef } from 'vue'
-import { arrayify, copyText, eventBus, pluralize, requireInjection } from '@/utils'
+import { arrayify, copyText, eventBus, pluralize } from '@/utils'
 import { commonStore, favoriteStore, playlistStore, queueStore, songStore, userStore } from '@/stores'
 import { downloadService, playbackService } from '@/services'
-import { useAuthorization, useContextMenu, usePlaylistManagement, useSongMenuMethods } from '@/composables'
-import { DialogBoxKey, MessageToasterKey, RouterKey } from '@/symbols'
+import {
+  useAuthorization,
+  useContextMenu,
+  useDialogBox,
+  useMessageToaster,
+  usePlaylistManagement,
+  useRouter,
+  useSongMenuMethods
+} from '@/composables'
 
-const dialogBox = requireInjection(DialogBoxKey)
-const toaster = requireInjection(MessageToasterKey)
-const router = requireInjection(RouterKey)
+const { toastSuccess } = useMessageToaster()
+const { showConfirmDialog } = useDialogBox()
+const { go, getRouteParam, isCurrentScreen } = useRouter()
+const { isAdmin } = useAuthorization()
+const { base, ContextMenuBase, open, close, trigger } = useContextMenu()
+const { removeSongsFromPlaylist } = usePlaylistManagement()
 
 const songs = ref<Song[]>([])
-
-const { isAdmin } = useAuthorization()
-const { context, base, ContextMenuBase, open, close, trigger } = useContextMenu()
-const { removeSongsFromPlaylist } = usePlaylistManagement()
 
 const {
   queueSongsAfterCurrent,
   queueSongsToBottom,
   queueSongsToTop,
   addSongsToFavorite,
-  addSongsToExistingPlaylist
+  addSongsToExistingPlaylist,
+  addSongsToNewPlaylist
 } = useSongMenuMethods(songs, close)
 
 const playlists = toRef(playlistStore.state, 'playlists')
 const allowDownload = toRef(commonStore.state, 'allow_download')
-const user = toRef(userStore.state, 'current')
 const queue = toRef(queueStore.state, 'songs')
 const currentSong = toRef(queueStore, 'current')
 
@@ -91,13 +101,13 @@ const firstSongPlaying = computed(() => songs.value.length ? songs.value[0].play
 const normalPlaylists = computed(() => playlists.value.filter(playlist => !playlist.is_smart))
 
 const canBeRemovedFromPlaylist = computed(() => {
-  if (router.$currentRoute.value.screen !== 'Playlist') return false
-  const playlist = playlistStore.byId(parseInt(router.$currentRoute.value.params!.id))
+  if (!isCurrentScreen('Playlist')) return false
+  const playlist = playlistStore.byId(parseInt(getRouteParam('id')!))
   return playlist && !playlist.is_smart
 })
 
-const isQueueScreen = computed(() => router.$currentRoute.value.screen === 'Queue')
-const isFavoritesScreen = computed(() => router.$currentRoute.value.screen === 'Favorites')
+const isQueueScreen = computed(() => isCurrentScreen('Queue'))
+const isFavoritesScreen = computed(() => isCurrentScreen('Favorites'))
 
 const doPlayback = () => trigger(() => {
   if (!songs.value.length) return
@@ -119,12 +129,12 @@ const doPlayback = () => trigger(() => {
 })
 
 const openEditForm = () => trigger(() => songs.value.length && eventBus.emit('MODAL_SHOW_EDIT_SONG_FORM', songs.value))
-const viewAlbumDetails = (albumId: number) => trigger(() => router.go(`album/${albumId}`))
-const viewArtistDetails = (artistId: number) => trigger(() => router.go(`artist/${artistId}`))
+const viewAlbumDetails = (albumId: number) => trigger(() => go(`album/${albumId}`))
+const viewArtistDetails = (artistId: number) => trigger(() => go(`artist/${artistId}`))
 const download = () => trigger(() => downloadService.fromSongs(songs.value))
 
 const removeFromPlaylist = () => trigger(async () => {
-  const playlist = playlistStore.byId(parseInt(router.$currentRoute.value.params!.id))
+  const playlist = playlistStore.byId(parseInt(getRouteParam('id')!))
   if (!playlist) return
 
   await removeSongsFromPlaylist(playlist, songs.value)
@@ -135,23 +145,27 @@ const removeFromFavorites = () => trigger(() => favoriteStore.unlike(songs.value
 
 const copyUrl = () => trigger(() => {
   copyText(songStore.getShareableUrl(songs.value[0]))
-  toaster.value.success('URL copied to clipboard.')
+  toastSuccess('URL copied to clipboard.')
 })
 
 const deleteFromFilesystem = () => trigger(async () => {
-  const confirmed = await dialogBox.value.confirm(
-    'Delete selected song(s) from the filesystem? This action is NOT reversible!'
-  )
-
-  if (confirmed) {
+  if (await showConfirmDialog('Delete selected song(s) from the filesystem? This action is NOT reversible!')) {
     await songStore.deleteFromFilesystem(songs.value)
-    toaster.value.success(`Deleted ${pluralize(songs.value, 'song')} from the filesystem.`)
+    toastSuccess(`Deleted ${pluralize(songs.value, 'song')} from the filesystem.`)
     eventBus.emit('SONGS_DELETED', songs.value)
   }
 })
 
 eventBus.on('SONG_CONTEXT_MENU_REQUESTED', async (e, _songs) => {
   songs.value = arrayify(_songs)
-  await open(e.pageY, e.pageX, { songs: songs.value })
+  await open(e.pageY, e.pageX)
 })
 </script>
+
+<style lang="scss" scoped>
+ul.playlists {
+  position: relative;
+  max-height: 192px;
+  overflow-y: auto;
+}
+</style>

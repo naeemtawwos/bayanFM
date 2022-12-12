@@ -5,30 +5,30 @@
       lists), so we use v-show.
       For those that don't need to maintain their own UI state, we use v-if and enjoy some code-splitting juice.
     -->
-    <VisualizerScreen v-if="screen === 'Visualizer'"/>
-    <AlbumArtOverlay v-if="showAlbumArtOverlay && currentSong" :album="currentSong?.album_id"/>
+    <VisualizerScreen v-if="screen === 'Visualizer'" />
+    <AlbumArtOverlay v-if="showAlbumArtOverlay && currentSong" :album="currentSong?.album_id" />
 
-    <HomeScreen v-show="screen === 'Home'"/>
-    <QueueScreen v-show="screen === 'Queue'"/>
-    <AllSongsScreen v-show="screen === 'Songs'"/>
-    <AlbumListScreen v-show="screen === 'Albums'"/>
-    <ArtistListScreen v-show="screen === 'Artists'"/>
-    <PlaylistScreen v-show="screen === 'Playlist'"/>
-    <FavoritesScreen v-show="screen === 'Favorites'"/>
-    <RecentlyPlayedScreen v-show="screen === 'RecentlyPlayed'"/>
-    <UploadScreen v-show="screen === 'Upload'"/>
-    <SearchExcerptsScreen v-show="screen === 'Search.Excerpt'"/>
-    <GenreScreen v-show="screen === 'Genre'"/>
+    <HomeScreen v-show="screen === 'Home'" />
+    <QueueScreen v-show="screen === 'Queue'" />
+    <AllSongsScreen v-show="screen === 'Songs'" />
+    <AlbumListScreen v-show="screen === 'Albums'" />
+    <ArtistListScreen v-show="screen === 'Artists'" />
+    <PlaylistScreen v-show="screen === 'Playlist'" />
+    <FavoritesScreen v-show="screen === 'Favorites'" />
+    <RecentlyPlayedScreen v-show="screen === 'RecentlyPlayed'" />
+    <UploadScreen v-show="screen === 'Upload'" />
+    <SearchExcerptsScreen v-show="screen === 'Search.Excerpt'" />
+    <GenreScreen v-show="screen === 'Genre'" />
 
-    <GenreListScreen v-if="screen === 'Genres'"/>
-    <SearchSongResultsScreen v-if="screen === 'Search.Songs'"/>
-    <AlbumScreen v-if="screen === 'Album'"/>
-    <ArtistScreen v-if="screen === 'Artist'"/>
-    <SettingsScreen v-if="screen === 'Settings'"/>
-    <ProfileScreen v-if="screen === 'Profile'"/>
-    <UserListScreen v-if="screen === 'Users'"/>
-    <YoutubeScreen v-if="useYouTube" v-show="screen === 'YouTube'"/>
-    <NotFoundScreen v-if="screen === '404'"/>
+    <GenreListScreen v-if="screen === 'Genres'" />
+    <SearchSongResultsScreen v-if="screen === 'Search.Songs'" />
+    <AlbumScreen v-if="screen === 'Album'" />
+    <ArtistScreen v-if="screen === 'Artist'" />
+    <SettingsScreen v-if="screen === 'Settings'" />
+    <ProfileScreen v-if="screen === 'Profile'" />
+    <UserListScreen v-if="screen === 'Users'" />
+    <YoutubeScreen v-if="useYouTube" v-show="screen === 'YouTube'" />
+    <NotFoundScreen v-if="screen === '404'" />
   </section>
 </template>
 
@@ -36,8 +36,8 @@
 import { defineAsyncComponent, onMounted, ref, toRef } from 'vue'
 import { requireInjection } from '@/utils'
 import { preferenceStore } from '@/stores'
-import { useThirdPartyServices } from '@/composables'
-import { CurrentSongKey, RouterKey } from '@/symbols'
+import { useRouter, useThirdPartyServices } from '@/composables'
+import { CurrentSongKey } from '@/symbols'
 
 import HomeScreen from '@/components/screens/HomeScreen.vue'
 import QueueScreen from '@/components/screens/QueueScreen.vue'
@@ -64,16 +64,16 @@ const NotFoundScreen = defineAsyncComponent(() => import('@/components/screens/N
 const VisualizerScreen = defineAsyncComponent(() => import('@/components/screens/VisualizerScreen.vue'))
 
 const { useYouTube } = useThirdPartyServices()
+const { resolveRoute, onRouteChanged } = useRouter()
 
-const router = requireInjection(RouterKey)
 const currentSong = requireInjection(CurrentSongKey, ref(null))
 
 const showAlbumArtOverlay = toRef(preferenceStore.state, 'showAlbumArtOverlay')
 const screen = ref<ScreenName>('Home')
 
-router.onRouteChanged(route => (screen.value = route.screen))
+onRouteChanged(route => (screen.value = route.screen))
 
-onMounted(() => router.resolve())
+onMounted(() => resolveRoute())
 </script>
 
 <style lang="scss">

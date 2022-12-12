@@ -2,29 +2,28 @@
   <section id="queueWrapper">
     <ScreenHeader :layout="songs.length === 0 ? 'collapsed' : headerLayout">
       Current Queue
-      <ControlsToggle v-model="showingControls"/>
+      <ControlsToggle v-model="showingControls" />
 
-      <template v-slot:thumbnail>
-        <ThumbnailStack :thumbnails="thumbnails"/>
+      <template #thumbnail>
+        <ThumbnailStack :thumbnails="thumbnails" />
       </template>
 
-      <template v-if="songs.length" v-slot:meta>
+      <template v-if="songs.length" #meta>
         <span>{{ pluralize(songs, 'song') }}</span>
         <span>{{ duration }}</span>
       </template>
 
-      <template v-slot:controls>
+      <template #controls>
         <SongListControls
           v-if="songs.length && (!isPhone || showingControls)"
-          :config="controlConfig"
-          @clearQueue="clearQueue"
-          @playAll="playAll"
-          @playSelected="playSelected"
+          @clear-queue="clearQueue"
+          @play-all="playAll"
+          @play-selected="playSelected"
         />
       </template>
     </ScreenHeader>
 
-    <SongListSkeleton v-if="loading"/>
+    <SongListSkeleton v-if="loading" />
     <SongList
       v-if="songs.length"
       ref="songList"
@@ -35,8 +34,8 @@
     />
 
     <ScreenEmptyState v-else>
-      <template v-slot:icon>
-        <icon :icon="faCoffee"/>
+      <template #icon>
+        <icon :icon="faCoffee" />
       </template>
 
       No audios queued.
@@ -51,20 +50,17 @@
 <script lang="ts" setup>
 import { faCoffee } from '@fortawesome/free-solid-svg-icons'
 import { computed, ref, toRef } from 'vue'
-import { eventBus, logger, pluralize, requireInjection } from '@/utils'
+import { eventBus, logger, pluralize } from '@/utils'
 import { commonStore, queueStore, songStore } from '@/stores'
 import { playbackService } from '@/services'
-import { useSongList } from '@/composables'
-import { DialogBoxKey, RouterKey } from '@/symbols'
+import { useDialogBox, useRouter, useSongList } from '@/composables'
 
 import ScreenHeader from '@/components/ui/ScreenHeader.vue'
 import ScreenEmptyState from '@/components/ui/ScreenEmptyState.vue'
 import SongListSkeleton from '@/components/ui/skeletons/SongListSkeleton.vue'
 
-const dialog = requireInjection(DialogBoxKey)
-const router = requireInjection(RouterKey)
-
-const controlConfig: Partial<SongListControlsConfig> = { clearQueue: true }
+const { go } = useRouter()
+const { showErrorDialog } = useDialogBox()
 
 const {
   SongList,
@@ -88,7 +84,7 @@ const libraryNotEmpty = computed(() => commonStore.state.song_count > 0)
 
 const playAll = async (shuffle = true) => {
   playbackService.queueAndPlay(songs.value, shuffle)
-  router.go('queue')
+  go('queue')
 }
 
 const shuffleSome = async () => {
@@ -97,7 +93,7 @@ const shuffleSome = async () => {
     await queueStore.fetchRandom()
     await playbackService.playFirstInQueue()
   } catch (e) {
-    dialog.value.error('Failed to fetch songs to play. Please try again.', 'Error')
+    showErrorDialog('Failed to fetch songs to play. Please try again.', 'Error')
     logger.error(e)
   } finally {
     loading.value = false
@@ -120,7 +116,7 @@ eventBus.on('SONG_QUEUED_FROM_ROUTE', async id => {
       throw new Error('Song not found')
     }
   } catch (e) {
-    dialog.value.error('Song not found. Please double check and try again.', 'Error')
+    showErrorDialog('Song not found. Please double check and try again.', 'Error')
     logger.error(e)
     return
   } finally {

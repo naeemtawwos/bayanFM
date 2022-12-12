@@ -1,25 +1,25 @@
 <template>
   <section id="genreWrapper">
-    <ScreenHeader :layout="headerLayout" v-if="genre">
-      Genre: <span class="text-thin">{{ decodeURIComponent(name) }}</span>
-      <ControlsToggle v-if="songs.length" v-model="showingControls"/>
+    <ScreenHeader v-if="genre" :layout="headerLayout">
+      Genre: <span class="text-thin">{{ decodeURIComponent(name!) }}</span>
+      <ControlsToggle v-if="songs.length" v-model="showingControls" />
 
-      <template v-slot:thumbnail>
-        <ThumbnailStack :thumbnails="thumbnails"/>
+      <template #thumbnail>
+        <ThumbnailStack :thumbnails="thumbnails" />
       </template>
 
-      <template v-if="genre" v-slot:meta>
+      <template v-if="genre" #meta>
         <span>{{ pluralize(genre.song_count, 'song') }}</span>
         <span>{{ duration }}</span>
       </template>
 
-      <template v-slot:controls>
-        <SongListControls v-if="!isPhone || showingControls" @playAll="playAll" @playSelected="playSelected"/>
+      <template #controls>
+        <SongListControls v-if="!isPhone || showingControls" @play-all="playAll" @play-selected="playSelected" />
       </template>
     </ScreenHeader>
-    <ScreenHeaderSkeleton v-else/>
+    <ScreenHeaderSkeleton v-else />
 
-    <SongListSkeleton v-if="showSkeletons"/>
+    <SongListSkeleton v-if="showSkeletons" />
     <SongList
       v-else
       ref="songList"
@@ -30,8 +30,8 @@
     />
 
     <ScreenEmptyState v-if="!songs.length && !loading">
-      <template v-slot:icon>
-        <icon :icon="faTags"/>
+      <template #icon>
+        <icon :icon="faTags" />
       </template>
 
       No songs in this genre.
@@ -42,16 +42,15 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { faTags } from '@fortawesome/free-solid-svg-icons'
-import { eventBus, logger, pluralize, requireInjection, secondsToHumanReadable } from '@/utils'
-import { DialogBoxKey, RouterKey } from '@/symbols'
-import { useSongList } from '@/composables'
+import { eventBus, logger, pluralize, secondsToHumanReadable } from '@/utils'
+import { playbackService } from '@/services'
 import { genreStore, songStore } from '@/stores'
+import { useDialogBox, useRouter, useSongList } from '@/composables'
 
 import ScreenHeader from '@/components/ui/ScreenHeader.vue'
 import ScreenEmptyState from '@/components/ui/ScreenEmptyState.vue'
 import SongListSkeleton from '@/components/ui/skeletons/SongListSkeleton.vue'
 import ScreenHeaderSkeleton from '@/components/ui/skeletons/ScreenHeaderSkeleton.vue'
-import { playbackService } from '@/services'
 
 const {
   SongList,
@@ -69,8 +68,8 @@ const {
   onScrollBreakpoint
 } = useSongList(ref<Song[]>([]))
 
-const router = requireInjection(RouterKey)
-const dialog = requireInjection(DialogBoxKey)
+const { showErrorDialog } = useDialogBox()
+const { getRouteParam, go, onRouteChanged } = useRouter()
 
 let sortField: SongListSortField = 'title'
 let sortOrder: SortOrder = 'asc'
@@ -110,7 +109,7 @@ const fetch = async () => {
     page.value = fetched.nextPage
     songs.value.push(...fetched.songs)
   } catch (e) {
-    dialog.value.error('Failed to fetch genre details or genre was not found.')
+    showErrorDialog('Failed to fetch genre details or genre was not found.', 'Error')
     logger.error(e)
   } finally {
     loading.value = false
@@ -125,9 +124,9 @@ const refresh = async () => {
   await fetch()
 }
 
-const getNameFromRoute = () => router.$currentRoute.value.params?.name || null
+const getNameFromRoute = () => getRouteParam('name') ?? null
 
-router.onRouteChanged(route => {
+onRouteChanged(route => {
   if (route.screen !== 'Genre') return
   name.value = getNameFromRoute()
 })
@@ -142,7 +141,7 @@ const playAll = async () => {
     playbackService.queueAndPlay(await songStore.fetchRandomForGenre(genre.value!, randomSongCount))
   }
 
-  router.go('queue')
+  go('queue')
 }
 
 onMounted(() => (name.value = getNameFromRoute()))

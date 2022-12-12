@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { expect, it } from 'vitest'
 import UnitTestCase from '@/__tests__/UnitTestCase'
 import { playbackService } from '@/services'
-import { fireEvent, getByRole, waitFor } from '@testing-library/vue'
+import { screen, waitFor } from '@testing-library/vue'
 import { CurrentSongKey } from '@/symbols'
 import { commonStore, favoriteStore, queueStore, recentlyPlayedStore, songStore } from '@/stores'
 import FooterPlayButton from './FooterPlayButton.vue'
@@ -22,9 +22,9 @@ new class extends UnitTestCase {
   protected test () {
     it('toggles the playback of current song', async () => {
       const toggleMock = this.mock(playbackService, 'toggle')
-      const { getByRole } = this.renderComponent(factory<Song>('song'))
+      this.renderComponent(factory<Song>('song'))
 
-      await fireEvent.click(getByRole('button'))
+      await this.user.click(screen.getByRole('button'))
 
       expect(toggleMock).toHaveBeenCalled()
     })
@@ -33,7 +33,7 @@ new class extends UnitTestCase {
       ['Album', 'fetchForAlbum'],
       ['Artist', 'fetchForArtist'],
       ['Playlist', 'fetchForPlaylist']
-    ])('initiates playback for %s screen', async (screen, fetchMethod) => {
+    ])('initiates playback for %s screen', async (screenName, fetchMethod) => {
       commonStore.state.song_count = 10
       const songs = factory<Song>('song', 3)
       const fetchMock = this.mock(songStore, fetchMethod).mockResolvedValue(songs)
@@ -41,13 +41,13 @@ new class extends UnitTestCase {
       const goMock = this.mock(this.router, 'go')
 
       await this.router.activateRoute({
-        screen,
+        screen: screenName,
         path: '_'
       }, { id: '42' })
 
-      const { getByRole } = this.renderComponent()
+      this.renderComponent()
 
-      await fireEvent.click(getByRole('button'))
+      await this.user.click(screen.getByRole('button'))
       await waitFor(() => {
         expect(fetchMock).toHaveBeenCalledWith(42)
         expect(playMock).toHaveBeenCalledWith(songs)
@@ -55,10 +55,14 @@ new class extends UnitTestCase {
       })
     })
 
-    it.each<[ScreenName, object, string]>([
+    it.each<[
+      ScreenName,
+      typeof favoriteStore | typeof recentlyPlayedStore,
+      MethodOf<typeof favoriteStore | typeof recentlyPlayedStore>
+    ]>([
       ['Favorites', favoriteStore, 'fetch'],
       ['RecentlyPlayed', recentlyPlayedStore, 'fetch']
-    ])('initiates playback for %s screen', async (screen, store, fetchMethod) => {
+    ])('initiates playback for %s screen', async (screenName, store, fetchMethod) => {
       commonStore.state.song_count = 10
       const songs = factory<Song>('song', 3)
       const fetchMock = this.mock(store, fetchMethod).mockResolvedValue(songs)
@@ -66,13 +70,13 @@ new class extends UnitTestCase {
       const goMock = this.mock(this.router, 'go')
 
       await this.router.activateRoute({
-        screen,
+        screen: screenName,
         path: '_'
       })
 
-      const { getByRole } = this.renderComponent()
+      this.renderComponent()
 
-      await fireEvent.click(getByRole('button'))
+      await this.user.click(screen.getByRole('button'))
       await waitFor(() => {
         expect(fetchMock).toHaveBeenCalled()
         expect(playMock).toHaveBeenCalledWith(songs)
@@ -80,7 +84,7 @@ new class extends UnitTestCase {
       })
     })
 
-    it.each<[ScreenName]>([['Queue'], ['Songs'], ['Albums']])('initiates playback %s screen', async (screen) => {
+    it.each<[ScreenName]>([['Queue'], ['Songs'], ['Albums']])('initiates playback %s screen', async screenName => {
       commonStore.state.song_count = 10
       const songs = factory<Song>('song', 3)
       const fetchMock = this.mock(queueStore, 'fetchRandom').mockResolvedValue(songs)
@@ -88,13 +92,13 @@ new class extends UnitTestCase {
       const goMock = this.mock(this.router, 'go')
 
       await this.router.activateRoute({
-        screen,
+        screen: screenName,
         path: '_'
       })
 
-      const { getByRole } = this.renderComponent()
+      this.renderComponent()
 
-      await fireEvent.click(getByRole('button'))
+      await this.user.click(screen.getByRole('button'))
       await waitFor(() => {
         expect(fetchMock).toHaveBeenCalled()
         expect(playMock).toHaveBeenCalledWith(songs)
@@ -113,9 +117,9 @@ new class extends UnitTestCase {
         path: '_'
       })
 
-      const { getByRole } = this.renderComponent()
+      this.renderComponent()
 
-      await fireEvent.click(getByRole('button'))
+      await this.user.click(screen.getByRole('button'))
       await waitFor(() => {
         expect(playMock).not.toHaveBeenCalled()
         expect(goMock).not.toHaveBeenCalled()

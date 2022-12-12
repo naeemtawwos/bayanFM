@@ -2,22 +2,22 @@
   <section id="usersWrapper">
     <ScreenHeader layout="collapsed">
       Users
-      <ControlsToggle v-model="showingControls"/>
+      <ControlsToggle v-model="showingControls" />
 
-      <template v-slot:controls>
-        <BtnGroup uppercased v-if="showingControls || !isPhone">
-          <Btn class="btn-add" data-testid="add-user-btn" green @click="showAddUserForm">
-            <icon :icon="faPlus"/>
+      <template #controls>
+        <BtnGroup v-if="showingControls || !isPhone" uppercased>
+          <Btn class="btn-add" green @click="showAddUserForm">
+            <icon :icon="faPlus" />
             Add
           </Btn>
         </BtnGroup>
       </template>
     </ScreenHeader>
 
-    <div class="main-scroll-wrap">
+    <div v-koel-overflow-fade class="main-scroll-wrap">
       <ul class="users">
         <li v-for="user in users" :key="user.id">
-          <UserCard :user="user"/>
+          <UserCard :user="user" />
         </li>
       </ul>
     </div>

@@ -15,8 +15,6 @@
       <a
         :title="`Shuffle all audios by ${artist.name}`"
         class="shuffle-artist"
-        data-testid="shuffle-artist"
-        href
         role="button"
         @click.prevent="shuffle"
       >
@@ -26,8 +24,6 @@
         v-if="allowDownload"
         :title="`Download all audios by ${artist.name}`"
         class="download-artist"
-        data-testid="download-artist"
-        href
         role="button"
         @click.prevent="download"
       >
@@ -39,16 +35,14 @@
 
 <script lang="ts" setup>
 import { computed, toRef, toRefs } from 'vue'
-import { eventBus, requireInjection } from '@/utils'
+import { eventBus } from '@/utils'
 import { artistStore, commonStore, songStore } from '@/stores'
 import { downloadService, playbackService } from '@/services'
-import { useDraggable } from '@/composables'
-import { RouterKey } from '@/symbols'
+import { useDraggable, useRouter } from '@/composables'
 
 import ArtistAlbumCard from '@/components/ui/ArtistAlbumCard.vue'
 
-const router = requireInjection(RouterKey)
-
+const { go } = useRouter()
 const { startDragging } = useDraggable('artist')
 
 const props = withDefaults(defineProps<{ artist: Artist, layout?: ArtistAlbumCardLayout }>(), { layout: 'full' })
@@ -60,7 +54,7 @@ const showing = computed(() => artistStore.isStandard(artist.value))
 
 const shuffle = async () => {
   playbackService.queueAndPlay(await songStore.fetchForArtist(artist.value), true /* shuffled */)
-  router.go('queue')
+  go('queue')
 }
 
 const download = () => downloadService.fromArtist(artist.value)

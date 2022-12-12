@@ -7,7 +7,7 @@
     @dragover="onDragOver"
     @drop="onDrop"
   >
-    <icon :icon="faUpload" size="6x"/>
+    <icon :icon="faUpload" size="6x" />
     <h3>Drop to upload</h3>
   </div>
 </template>
@@ -26,7 +26,6 @@ const onDropLeave = () => (droppable.value = false)
 const onDragOver = (event: DragEvent) => {
   if (!event.dataTransfer?.types.includes('Files')) return false
   event.preventDefault()
-  event.dataTransfer!.dropEffect = 'copy'
   droppable.value = true
 }
 

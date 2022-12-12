@@ -1,9 +1,9 @@
 <template>
-  <div id="extraPanel" :class="{ 'showing-pane': selectedTab }">
+  <div id="extraPanel" :class="{ 'showing-pane': activeTab }">
     <div class="controls">
       <div class="top">
-        <SidebarMenuToggleButton class="burger"/>
-        <ExtraPanelTabHeader v-if="song" v-model="selectedTab"/>
+        <SidebarMenuToggleButton class="burger" />
+        <ExtraPanelTabHeader v-if="song" v-model="activeTab" />
       </div>
 
       <div class="bottom">
@@ -13,59 +13,60 @@
           type="button"
           @click.prevent="openAboutKoelModal"
         >
-          <icon :icon="faInfoCircle"/>
-          <span v-if="shouldNotifyNewVersion" class="new-version-notification"/>
+          <icon :icon="faInfoCircle" />
+          <span v-if="shouldNotifyNewVersion" class="new-version-notification" />
         </button>
 
         <button v-koel-tooltip.left title="Log out" type="button" @click.prevent="logout">
-          <icon :icon="faArrowRightFromBracket"/>
+          <icon :icon="faArrowRightFromBracket" />
         </button>
 
-        <ProfileAvatar @click="onProfileLinkClick"/>
+        <ProfileAvatar @click="onProfileLinkClick" />
       </div>
     </div>
 
-    <div class="panes" v-if="song" v-show="selectedTab">
+    <div v-if="song" v-show="activeTab" class="panes">
       <div
-        v-show="selectedTab === 'Lyrics'"
+        v-show="activeTab === 'Lyrics'"
         id="extraPanelLyrics"
         aria-labelledby="extraTabLyrics"
         role="tabpanel"
         tabindex="0"
       >
-        <LyricsPane :song="song"/>
+        <LyricsPane :song="song" />
       </div>
 
       <div
-        v-show="selectedTab === 'Artist'"
+        v-show="activeTab === 'Artist'"
         id="extraPanelArtist"
         aria-labelledby="extraTabArtist"
         role="tabpanel"
         tabindex="0"
       >
-        <ArtistInfo v-if="artist" :artist="artist" mode="aside"/>
+        <ArtistInfo v-if="artist" :artist="artist" mode="aside" />
         <span v-else>Loading…</span>
       </div>
 
       <div
-        v-show="selectedTab === 'Album'"
+        v-show="activeTab === 'Album'"
         id="extraPanelAlbum"
         aria-labelledby="extraTabAlbum"
         role="tabpanel"
         tabindex="0"
       >
-        <AlbumInfo v-if="album" :album="album" mode="aside"/>
+        <AlbumInfo v-if="album" :album="album" mode="aside" />
         <span v-else>Loading…</span>
       </div>
 
       <div
-        v-show="selectedTab === 'YouTube'"
+        v-show="activeTab === 'YouTube'"
         id="extraPanelYouTube"
+        data-testid="extra-panel-youtube"
         aria-labelledby="extraTabYouTube"
         role="tabpanel"
         tabindex="0"
       >
-        <YouTubeVideoList v-if="useYouTube && song" :song="song"/>
+        <YouTubeVideoList v-if="useYouTube && song" :song="song" />
       </div>
     </div>
   </div>
@@ -74,8 +75,8 @@
 <script lang="ts" setup>
 import isMobile from 'ismobilejs'
 import { faArrowRightFromBracket, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
-import { defineAsyncComponent, ref, watch } from 'vue'
-import { albumStore, artistStore } from '@/stores'
+import { defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import { albumStore, artistStore, preferenceStore } from '@/stores'
 import { useAuthorization, useNewVersionNotification, useThirdPartyServices } from '@/composables'
 import { eventBus, logger, requireInjection } from '@/utils'
 import { CurrentSongKey } from '@/symbols'
@@ -91,19 +92,21 @@ const ExtraPanelTabHeader = defineAsyncComponent(() => import('@/components/ui/E
 
 const { currentUser } = useAuthorization()
 const { useYouTube } = useThirdPartyServices()
+const { shouldNotifyNewVersion } = useNewVersionNotification()
 
 const song = requireInjection(CurrentSongKey, ref(null))
-const selectedTab = ref<ExtraPanelTab | undefined>(undefined)
+const activeTab = ref<ExtraPanelTab | null>(null)
 
-const artist = ref<Artist | null>(null)
-const album = ref<Album | null>(null)
+const artist = ref<Artist>()
+const album = ref<Album>()
 
 watch(song, song => song && fetchSongInfo(song))
+watch(activeTab, tab => (preferenceStore.activeExtraPanelTab = tab))
 
 const fetchSongInfo = async (_song: Song) => {
   song.value = _song
-  artist.value = null
-  album.value = null
+  artist.value = undefined
+  album.value = undefined
 
   try {
     artist.value = await artistStore.resolve(_song.artist_id)
@@ -113,11 +116,11 @@ const fetchSongInfo = async (_song: Song) => {
   }
 }
 
-const { shouldNotifyNewVersion } = useNewVersionNotification()
-
 const openAboutKoelModal = () => eventBus.emit('MODAL_SHOW_ABOUT_KOEL')
-const onProfileLinkClick = () => isMobile.any && (selectedTab.value = undefined)
+const onProfileLinkClick = () => isMobile.any && (activeTab.value = null)
 const logout = () => eventBus.emit('LOG_OUT')
+
+onMounted(() => isMobile.any || (activeTab.value = preferenceStore.activeExtraPanelTab))
 </script>
 
 <style lang="scss" scoped>
@@ -126,7 +129,7 @@ const logout = () => eventBus.emit('LOG_OUT')
   flex-direction: row-reverse;
   color: var(--color-text-secondary);
   height: var(--header-height);
-  z-index: 1;
+  z-index: 2;
 
   @media screen and (max-width: 768px) {
     @include themed-background();

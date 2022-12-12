@@ -2,42 +2,41 @@
   <section id="songResultsWrapper">
     <ScreenHeader :layout="songs.length === 0 ? 'collapsed' : headerLayout">
       Songs for <span class="text-thin">{{ decodedQ }}</span>
-      <ControlsToggle v-model="showingControls"/>
+      <ControlsToggle v-model="showingControls" />
 
-      <template v-slot:thumbnail>
-        <ThumbnailStack :thumbnails="thumbnails"/>
+      <template #thumbnail>
+        <ThumbnailStack :thumbnails="thumbnails" />
       </template>
 
-      <template v-if="songs.length" v-slot:meta>
+      <template v-if="songs.length" #meta>
         <span>{{ pluralize(songs, 'song') }}</span>
         <span>{{ duration }}</span>
       </template>
 
-      <template v-slot:controls>
+      <template #controls>
         <SongListControls
           v-if="songs.length && (!isPhone || showingControls)"
-          @playAll="playAll"
-          @playSelected="playSelected"
+          @play-all="playAll"
+          @play-selected="playSelected"
         />
       </template>
     </ScreenHeader>
 
-    <SongListSkeleton v-if="loading"/>
-    <SongList v-else ref="songList" @sort="sort" @press:enter="onPressEnter" @scroll-breakpoint="onScrollBreakpoint"/>
+    <SongListSkeleton v-if="loading" />
+    <SongList v-else ref="songList" @sort="sort" @press:enter="onPressEnter" @scroll-breakpoint="onScrollBreakpoint" />
   </section>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, ref, toRef } from 'vue'
 import { searchStore } from '@/stores'
-import { useSongList } from '@/composables'
-import { pluralize, requireInjection } from '@/utils'
-import { RouterKey } from '@/symbols'
+import { useRouter, useSongList } from '@/composables'
+import { pluralize } from '@/utils'
 
 import ScreenHeader from '@/components/ui/ScreenHeader.vue'
 import SongListSkeleton from '@/components/ui/skeletons/SongListSkeleton.vue'
 
-const router = requireInjection(RouterKey)
+const { getRouteParam } = useRouter()
 const q = ref('')
 
 const {
@@ -65,7 +64,7 @@ const loading = ref(false)
 searchStore.resetSongResultState()
 
 onMounted(async () => {
-  q.value = router.$currentRoute.value.params?.q || ''
+  q.value = getRouteParam('q') || ''
   if (!q.value) return
 
   loading.value = true

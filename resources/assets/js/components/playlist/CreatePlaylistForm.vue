@@ -1,13 +1,22 @@
 <template>
-  <div @keydown.esc="maybeClose">
-    <SoundBars v-if="loading"/>
-    <form v-else @submit.prevent="submit">
-      <header>
-        <h1>New Playlist</h1>
-      </header>
+  <form @submit.prevent="submit" @keydown.esc="maybeClose">
+    <header>
+      <h1>
+        New Playlist
+        <span
+          v-if="songs.length"
+          data-testid="from-songs"
+          class="text-secondary"
+        >
+          from {{ pluralize(songs, 'song') }}
+        </span>
+      </h1>
+    </header>
 
-      <main>
-        <div class="form-row">
+    <main>
+      <div class="form-row cols">
+        <label class="name">
+          Name
           <input
             v-model="name"
             v-koel-focus
@@ -16,58 +25,85 @@
             required
             type="text"
           >
-        </div>
-      </main>
+        </label>
+        <label class="folder">
+          Folder
+          <select v-model="folderId">
+            <option :value="null" />
+            <option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.name }}</option>
+          </select>
+        </label>
+      </div>
+    </main>
 
-      <footer>
-        <Btn type="submit">Save</Btn>
-        <Btn white @click.prevent="maybeClose">Cancel</Btn>
-      </footer>
-    </form>
-  </div>
+    <footer>
+      <Btn type="submit">Save</Btn>
+      <Btn white @click.prevent="maybeClose">Cancel</Btn>
+    </footer>
+  </form>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { playlistStore } from '@/stores'
-import { logger, requireInjection } from '@/utils'
-import { DialogBoxKey, MessageToasterKey, RouterKey } from '@/symbols'
+import { ref, toRef } from 'vue'
+import { playlistFolderStore, playlistStore } from '@/stores'
+import { logger, pluralize } from '@/utils'
+import { useDialogBox, useMessageToaster, useModal, useOverlay, useRouter } from '@/composables'
 
-import SoundBars from '@/components/ui/SoundBars.vue'
 import Btn from '@/components/ui/Btn.vue'
 
-const router = requireInjection(RouterKey)
-const toaster = requireInjection(MessageToasterKey)
-const dialog = requireInjection(DialogBoxKey)
+const { showOverlay, hideOverlay } = useOverlay()
+const { toastSuccess } = useMessageToaster()
+const { showConfirmDialog, showErrorDialog } = useDialogBox()
+const { go } = useRouter()
+const { getFromContext } = useModal()
 
-const loading = ref(false)
+const targetFolder = getFromContext<PlaylistFolder | null>('folder') ?? null
+const songs = getFromContext<Song[]>('songs') ?? []
+
+const folderId = ref(targetFolder?.id)
 const name = ref('')
+const folders = toRef(playlistFolderStore.state, 'folders')
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 const close = () => emit('close')
 
 const submit = async () => {
-  loading.value = true
+  showOverlay()
 
   try {
-    const playlist = await playlistStore.store(name.value)
+    const playlist = await playlistStore.store(name.value, {
+      folder_id: folderId.value
+    }, songs)
+
     close()
-    toaster.value.success(`Playlist "${playlist.name}" created.`)
-    router.go(`playlist/${playlist.id}`)
+    toastSuccess(`Playlist "${playlist.name}" created.`)
+    go(`playlist/${playlist.id}`)
   } catch (error) {
-    dialog.value.error('Something went wrong. Please try again.')
+    showErrorDialog('Something went wrong. Please try again.', 'Error')
     logger.error(error)
   } finally {
-    loading.value = false
+    hideOverlay()
   }
 }
 
+const isPristine = () => name.value.trim() === '' && folderId.value === targetFolder?.id
+
 const maybeClose = async () => {
-  if (name.value.trim() === '') {
+  if (isPristine()) {
     close()
     return
   }
 
-  await dialog.value.confirm('Discard all changes?') && close()
+  await showConfirmDialog('Discard all changes?') && close()
 }
 </script>
+
+<style lang="scss" scoped>
+form {
+  width: 540px;
+}
+
+label.folder {
+  flex: .6;
+}
+</style>

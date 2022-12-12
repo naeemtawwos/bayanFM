@@ -1,62 +1,57 @@
 <template>
-  <div @keydown.esc="maybeClose">
-    <SoundBars v-if="loading"/>
-    <form v-else data-testid="edit-playlist-folder-form" @submit.prevent="submit">
-      <header>
-        <h1>Rename Playlist Folder</h1>
-      </header>
+  <form @submit.prevent="submit" @keydown.esc="maybeClose">
+    <header>
+      <h1>Rename Playlist Folder</h1>
+    </header>
 
-      <main>
-        <div class="form-row">
-          <input
-            v-model="name"
-            v-koel-focus
-            name="name"
-            placeholder="Folder name"
-            required
-            title="Folder name"
-            type="text"
-          >
-        </div>
-      </main>
+    <main>
+      <div class="form-row">
+        <input
+          v-model="name"
+          v-koel-focus
+          name="name"
+          placeholder="Folder name"
+          required
+          title="Folder name"
+          type="text"
+        >
+      </div>
+    </main>
 
-      <footer>
-        <Btn type="submit">Save</Btn>
-        <Btn white @click.prevent="maybeClose">Cancel</Btn>
-      </footer>
-    </form>
-  </div>
+    <footer>
+      <Btn type="submit">Save</Btn>
+      <Btn white @click.prevent="maybeClose">Cancel</Btn>
+    </footer>
+  </form>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { logger, requireInjection } from '@/utils'
+import { logger } from '@/utils'
 import { playlistFolderStore } from '@/stores'
-import { DialogBoxKey, MessageToasterKey, PlaylistFolderKey } from '@/symbols'
+import { useDialogBox, useMessageToaster, useModal, useOverlay } from '@/composables'
 
 import Btn from '@/components/ui/Btn.vue'
-import SoundBars from '@/components/ui/SoundBars.vue'
 
-const toaster = requireInjection(MessageToasterKey)
-const dialog = requireInjection(DialogBoxKey)
-const [folder, updateFolderName] = requireInjection(PlaylistFolderKey)
+const { showOverlay, hideOverlay } = useOverlay()
+const { toastSuccess } = useMessageToaster()
+const { showConfirmDialog, showErrorDialog } = useDialogBox()
+const folder = useModal().getFromContext<PlaylistFolder>('folder')
 
-const name = ref(folder.value.name)
-const loading = ref(false)
+const name = ref(folder.name)
 
 const submit = async () => {
-  loading.value = true
+  showOverlay()
 
   try {
-    await playlistFolderStore.rename(folder.value, name.value)
-    updateFolderName(name.value)
-    toaster.value.success('Playlist folder renamed.')
+    await playlistFolderStore.rename(folder, name.value)
+    toastSuccess('Playlist folder renamed.')
     close()
   } catch (error) {
-    dialog.value.error('Something went wrong. Please try again.')
+    showErrorDialog('Something went wrong. Please try again.', 'Error')
     logger.error(error)
   } finally {
-    loading.value = false
+    hideOverlay()
   }
 }
 
@@ -64,11 +59,11 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 const close = () => emit('close')
 
 const maybeClose = async () => {
-  if (name.value.trim() === folder.value.name) {
+  if (name.value.trim() === folder.name) {
     close()
     return
   }
 
-  await dialog.value.confirm('Discard all changes?') && close()
+  await showConfirmDialog('Discard all changes?') && close()
 }
 </script>

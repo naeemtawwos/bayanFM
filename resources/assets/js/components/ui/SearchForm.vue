@@ -1,7 +1,7 @@
 <template>
   <form id="searchForm" role="search" @submit.prevent="onSubmit">
     <span class="icon">
-      <icon :icon="faSearch"/>
+      <icon :icon="faSearch" />
     </span>
 
     <input
@@ -19,7 +19,7 @@
     >
 
     <button type="submit" title="Search">
-      <icon :icon="faSearch"/>
+      <icon :icon="faSearch" />
     </button>
   </form>
 </template>
@@ -29,12 +29,12 @@ import isMobile from 'ismobilejs'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { ref } from 'vue'
 import { debounce } from 'lodash'
-import { eventBus, requireInjection } from '@/utils'
-import { RouterKey } from '@/symbols'
+import { eventBus } from '@/utils'
+import { useRouter } from '@/composables'
 
 const placeholder = isMobile.any ? 'Search' : 'Press F to search'
 
-const router = requireInjection(RouterKey)
+const { go } = useRouter()
 
 const input = ref<HTMLInputElement>()
 const q = ref('')
@@ -50,10 +50,10 @@ if (process.env.NODE_ENV !== 'test') {
 
 const onSubmit = () => {
   eventBus.emit('TOGGLE_SIDEBAR')
-  router.go('search')
+  go('search')
 }
 
-const maybeGoToSearchScreen = () => isMobile.any || router.go('search')
+const maybeGoToSearchScreen = () => isMobile.any || go('search')
 
 eventBus.on('FOCUS_SEARCH_FIELD', () => {
   input.value?.focus()

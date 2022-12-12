@@ -2,10 +2,10 @@
   <section id="homeWrapper">
     <ScreenHeader layout="collapsed">{{ greeting }}</ScreenHeader>
 
-    <div class="main-scroll-wrap" @scroll="scrolling">
+    <div v-koel-overflow-fade class="main-scroll-wrap" @scroll="scrolling">
       <ScreenEmptyState v-if="libraryEmpty">
-        <template v-slot:icon>
-          <icon :icon="faVolumeOff"/>
+        <template #icon>
+          <icon :icon="faVolumeOff" />
         </template>
         No songs found.
         <span class="secondary d-block">
@@ -15,19 +15,19 @@
 
       <template v-else>
         <div class="two-cols">
-          <MostPlayedSongs data-testid="most-played-songs" :loading="loading"/>
-          <RecentlyPlayedSongs data-testid="recently-played-songs" :loading="loading"/>
+          <MostPlayedSongs data-testid="most-played-songs" :loading="loading" />
+          <RecentlyPlayedSongs data-testid="recently-played-songs" :loading="loading" />
         </div>
 
         <div class="two-cols">
-          <RecentlyAddedAlbums data-testid="recently-added-albums" :loading="loading"/>
-          <RecentlyAddedSongs data-testid="recently-added-songs" :loading="loading"/>
+          <RecentlyAddedAlbums data-testid="recently-added-albums" :loading="loading" />
+          <RecentlyAddedSongs data-testid="recently-added-songs" :loading="loading" />
         </div>
 
-        <MostPlayedArtists data-testid="most-played-artists" :loading="loading"/>
-        <MostPlayedAlbums data-testid="most-played-albums" :loading="loading"/>
+        <MostPlayedArtists data-testid="most-played-artists" :loading="loading" />
+        <MostPlayedAlbums data-testid="most-played-albums" :loading="loading" />
 
-        <ToTopButton/>
+        <ToTopButton />
       </template>
     </div>
   </section>
@@ -37,10 +37,9 @@
 import { faVolumeOff } from '@fortawesome/free-solid-svg-icons'
 import { sample } from 'lodash'
 import { computed, ref } from 'vue'
-import { eventBus, logger, noop, requireInjection } from '@/utils'
+import { eventBus, logger, noop } from '@/utils'
 import { commonStore, overviewStore, userStore } from '@/stores'
-import { useAuthorization, useInfiniteScroll, useScreen } from '@/composables'
-import { DialogBoxKey } from '@/symbols'
+import { useAuthorization, useDialogBox, useInfiniteScroll, useRouter } from '@/composables'
 
 import MostPlayedSongs from '@/components/screens/home/MostPlayedSongs.vue'
 import RecentlyPlayedSongs from '@/components/screens/home/RecentlyPlayedSongs.vue'
@@ -52,10 +51,8 @@ import ScreenHeader from '@/components/ui/ScreenHeader.vue'
 import ScreenEmptyState from '@/components/ui/ScreenEmptyState.vue'
 
 const { ToTopButton, scrolling } = useInfiniteScroll(() => noop())
-
 const { isAdmin } = useAuthorization()
-
-const dialog = requireInjection(DialogBoxKey)
+const { showErrorDialog } = useDialogBox()
 
 const greetings = [
 
@@ -80,14 +77,14 @@ let initialized = false
 eventBus.on('SONGS_DELETED', () => overviewStore.refresh())
   .on('SONGS_UPDATED', () => overviewStore.refresh())
 
-useScreen('Home').onScreenActivated(async () => {
+useRouter().onScreenActivated('Home', async () => {
   if (!initialized) {
     loading.value = true
     try {
       await overviewStore.init()
       initialized = true
     } catch (e) {
-      dialog.value.error('Failed to load home screen data. Please try again.')
+      showErrorDialog('Failed to load home screen data. Please try again.', 'Error')
       logger.error(e)
     } finally {
       loading.value = false
