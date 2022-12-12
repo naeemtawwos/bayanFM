@@ -1,14 +1,13 @@
 <template>
   <article
     :class="{ playing: song.playback_state === 'Playing' || song.playback_state === 'Paused' }"
-    data-testid="song-card"
     draggable="true"
     tabindex="0"
     @dragstart="onDragStart"
     @contextmenu.prevent="requestContextMenu"
     @dblclick.prevent="play"
   >
-    <SongThumbnail :song="song"/>
+    <SongThumbnail :song="song" />
     <main>
       <div class="details">
         <h3>{{ song.title }}</h3>
@@ -17,7 +16,7 @@
           - {{ pluralize(song.play_count, 'play') }}
         </p>
       </div>
-      <LikeButton :song="song"/>
+      <LikeButton :song="song" />
     </main>
   </article>
 </template>

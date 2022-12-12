@@ -1,22 +1,22 @@
 <template>
-  <Overlay/>
-  <DialogBox ref="dialog"/>
-  <MessageToaster ref="toaster"/>
-  <GlobalEventListeners/>
-  <OfflineNotification v-if="offline"/>
+  <Overlay ref="overlay" />
+  <DialogBox ref="dialog" />
+  <MessageToaster ref="toaster" />
+  <GlobalEventListeners />
+  <OfflineNotification v-if="offline" />
 
   <div v-if="authenticated" id="main" @dragend="onDragEnd" @dragover="onDragOver" @drop="onDrop">
-    <Hotkeys/>
-    <MainWrapper/>
-    <AppFooter/>
-    <SupportKoel/>
-    <SongContextMenu/>
-    <AlbumContextMenu/>
-    <ArtistContextMenu/>
-    <PlaylistContextMenu/>
-    <PlaylistFolderContextMenu/>
-    <CreateNewPlaylistContextMenu/>
-    <DropZone v-show="showDropZone"/>
+    <Hotkeys />
+    <MainWrapper />
+    <AppFooter />
+    <SupportKoel />
+    <SongContextMenu />
+    <AlbumContextMenu />
+    <ArtistContextMenu />
+    <PlaylistContextMenu />
+    <PlaylistFolderContextMenu />
+    <CreateNewPlaylistContextMenu />
+    <DropZone v-show="showDropZone" />
   </div>
 
   <div v-else class="login-wrapper">
@@ -33,11 +33,10 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, nextTick, onMounted, provide, ref, watch } from 'vue'
-import { hideOverlay, requireInjection, showOverlay } from '@/utils'
 import { commonStore, preferenceStore as preferences, queueStore } from '@/stores'
 import { authService, socketListener, socketService, uploadService } from '@/services'
-import { CurrentSongKey, DialogBoxKey, MessageToasterKey, RouterKey } from '@/symbols'
-import { useNetworkStatus } from '@/composables'
+import { CurrentSongKey, DialogBoxKey, MessageToasterKey, OverlayKey } from '@/symbols'
+import { useNetworkStatus, useRouter } from '@/composables'
 
 import DialogBox from '@/components/ui/DialogBox.vue'
 import MessageToaster from '@/components/ui/MessageToaster.vue'
@@ -64,6 +63,7 @@ const CreateNewPlaylistContextMenu = defineAsyncComponent(() => import('@/compon
 const SupportKoel = defineAsyncComponent(() => import('@/components/meta/SupportKoel.vue'))
 const DropZone = defineAsyncComponent(() => import('@/components/ui/upload/DropZone.vue'))
 
+const overlay = ref<InstanceType<typeof Overlay>>()
 const dialog = ref<InstanceType<typeof DialogBox>>()
 const toaster = ref<InstanceType<typeof MessageToaster>>()
 const currentSong = ref<Song | null>(null)
@@ -71,6 +71,7 @@ const authenticated = ref(false)
 const showDropZone = ref(false)
 const showlogin = ref(true)
 const showregister = ref(false)
+const { isCurrentScreen } = useRouter()
 const { offline } = useNetworkStatus()
 
 /**
@@ -111,7 +112,7 @@ onMounted(async () => {
 })
 
 const init = async () => {
-  showOverlay()
+  overlay.value!.show({ message: 'Just a little patience…' })
 
   try {
     await commonStore.init()
@@ -127,18 +128,15 @@ const init = async () => {
     })
 
     await socketService.init() && socketListener.listen()
-
-    hideOverlay()
+    overlay.value!.hide()
   } catch (err) {
     authenticated.value = false
     throw err
   }
 }
 
-const router = requireInjection(RouterKey)
-
 const onDragOver = (e: DragEvent) => {
-  showDropZone.value = Boolean(e.dataTransfer?.types.includes('Files')) && router.$currentRoute.value.screen !== 'Upload'
+  showDropZone.value = Boolean(e.dataTransfer?.types.includes('Files')) && !isCurrentScreen('Upload')
 }
 
 watch(() => queueStore.current, song => song && (currentSong.value = song))
@@ -146,6 +144,7 @@ watch(() => queueStore.current, song => song && (currentSong.value = song))
 const onDragEnd = () => (showDropZone.value = false)
 const onDrop = () => (showDropZone.value = false)
 
+provide(OverlayKey, overlay)
 provide(DialogBoxKey, dialog)
 provide(MessageToasterKey, toaster)
 provide(CurrentSongKey, currentSong)

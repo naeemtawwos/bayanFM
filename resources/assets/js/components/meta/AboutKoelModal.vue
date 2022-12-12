@@ -24,7 +24,7 @@
       </p>
 
 
-      <SponsorList/>
+      <SponsorList />
 
       <p>
         Loving Bayan FM? Please consider supporting us by

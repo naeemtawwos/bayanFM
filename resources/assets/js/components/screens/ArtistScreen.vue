@@ -1,16 +1,16 @@
 <template>
   <section id="artistWrapper">
-    <ScreenHeaderSkeleton v-if="loading"/>
+    <ScreenHeaderSkeleton v-if="loading" />
 
     <ScreenHeader v-if="!loading && artist" :layout="songs.length === 0 ? 'collapsed' : headerLayout">
       {{ artist.name }}
-      <ControlsToggle v-model="showingControls"/>
+      <ControlsToggle v-model="showingControls" />
 
-      <template v-slot:thumbnail>
-        <ArtistThumbnail :entity="artist"/>
+      <template #thumbnail>
+        <ArtistThumbnail :entity="artist" />
       </template>
 
-      <template v-slot:meta>
+      <template #meta>
         <span>{{ pluralize(albumCount, 'album') }}</span>
         <span>{{ pluralize(songs, 'song') }}</span>
         <span>{{ duration }}</span>
@@ -18,7 +18,6 @@
         <a
           v-if="allowDownload"
           class="download"
-          href
           role="button"
           title="Download all songs by this artist"
           @click.prevent="download"
@@ -27,11 +26,11 @@
         </a>
       </template>
 
-      <template v-slot:controls>
+      <template #controls>
         <SongListControls
           v-if="songs.length && (!isPhone || showingControls)"
-          @playAll="playAll"
-          @playSelected="playSelected"
+          @play-all="playAll"
+          @play-selected="playSelected"
         />
       </template>
     </ScreenHeader>
@@ -44,16 +43,16 @@
         </label>
         <label :class="{ active: activeTab === 'Albums' }">
           Albums
-          <input type="radio" name="tab" value="Albums" v-model="activeTab"/>
+          <input v-model="activeTab" type="radio" name="tab" value="Albums">
         </label>
-        <label :class="{ active: activeTab === 'Info' }" v-if="useLastfm">
+        <label v-if="useLastfm" :class="{ active: activeTab === 'Info' }">
           Information
-          <input type="radio" name="tab" value="Info" v-model="activeTab"/>
+          <input v-model="activeTab" type="radio" name="tab" value="Info">
         </label>
       </template>
 
       <div v-show="activeTab === 'Songs'" class="songs-pane">
-        <SongListSkeleton v-if="loading"/>
+        <SongListSkeleton v-if="loading" />
         <SongList
           v-else
           ref="songList"
@@ -66,18 +65,18 @@
       <div v-show="activeTab === 'Albums'" class="albums-pane">
         <ul v-if="albums" class="as-list">
           <li v-for="album in albums" :key="album.id">
-            <AlbumCard :album="album" layout="compact"/>
+            <AlbumCard :album="album" layout="compact" />
           </li>
         </ul>
         <ul v-else class="as-list">
           <li v-for="i in 12" :key="i">
-            <AlbumCardSkeleton layout="compact"/>
+            <AlbumCardSkeleton layout="compact" />
           </li>
         </ul>
       </div>
 
-      <div v-show="activeTab === 'Info'" class="info-pane" v-if="useLastfm && artist">
-        <ArtistInfo :artist="artist" mode="full"/>
+      <div v-show="activeTab === 'Info'" v-if="useLastfm && artist" class="info-pane">
+        <ArtistInfo :artist="artist" mode="full" />
       </div>
     </ScreenTabs>
   </section>
@@ -85,11 +84,10 @@
 
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, onMounted, ref, toRef, watch } from 'vue'
-import { eventBus, logger, pluralize, requireInjection } from '@/utils'
+import { eventBus, logger, pluralize } from '@/utils'
 import { albumStore, artistStore, commonStore, songStore } from '@/stores'
 import { downloadService } from '@/services'
-import { useSongList, useThirdPartyServices } from '@/composables'
-import { DialogBoxKey, RouterKey } from '@/symbols'
+import { useDialogBox, useRouter, useSongList, useThirdPartyServices } from '@/composables'
 
 import ScreenHeader from '@/components/ui/ScreenHeader.vue'
 import ArtistThumbnail from '@/components/ui/AlbumArtistThumbnail.vue'
@@ -104,8 +102,8 @@ const AlbumCardSkeleton = defineAsyncComponent(() => import('@/components/ui/ske
 type Tab = 'Songs' | 'Albums' | 'Info'
 const activeTab = ref<Tab>('Songs')
 
-const dialog = requireInjection(DialogBoxKey)
-const router = requireInjection(RouterKey)
+const { showErrorDialog } = useDialogBox()
+const { getRouteParam, go } = useRouter()
 
 const artistId = ref<number>()
 const artist = ref<Artist>()
@@ -157,7 +155,7 @@ watch(artistId, async id => {
     ])
   } catch (error) {
     logger.error(error)
-    dialog.value.error('Failed to load artist. Please try again.')
+    showErrorDialog('Failed to load artist. Please try again.', 'Error')
   } finally {
     loading.value = false
   }
@@ -165,10 +163,10 @@ watch(artistId, async id => {
 
 const download = () => downloadService.fromArtist(artist.value!)
 
-onMounted(() => (artistId.value = parseInt(router.$currentRoute.value.params!.id)))
+onMounted(() => (artistId.value = parseInt(getRouteParam('id')!)))
 
 // if the current artist has been deleted, go back to the list
-eventBus.on('SONGS_UPDATED', () => artistStore.byId(artist.value!.id) || router.go('artists'))
+eventBus.on('SONGS_UPDATED', () => artistStore.byId(artist.value!.id) || go('artists'))
 </script>
 
 <style lang="scss" scoped>

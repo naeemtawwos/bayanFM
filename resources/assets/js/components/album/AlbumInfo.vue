@@ -8,19 +8,19 @@
     </h1>
 
     <main>
-      <AlbumThumbnail v-if="mode === 'aside'" :entity="album"/>
+      <AlbumThumbnail v-if="mode === 'aside'" :entity="album" />
 
       <template v-if="info">
         <div v-if="info.wiki?.summary" class="wiki">
-          <div v-if="showSummary" class="summary" data-testid="summary" v-html="info.wiki.summary"/>
-          <div v-if="showFull" class="full" data-testid="full" v-html="info.wiki.full"/>
+          <div v-if="showSummary" class="summary" data-testid="summary" v-html="info.wiki.summary" />
+          <div v-if="showFull" class="full" data-testid="full" v-html="info.wiki.full" />
 
-          <button v-if="showSummary" class="more" data-testid="more-btn" @click.prevent="showingFullWiki = true">
+          <button v-if="showSummary" class="more" @click.prevent="showingFullWiki = true">
             Full Wiki
           </button>
         </div>
 
-        <TrackList v-if="info.tracks?.length" :album="album" :tracks="info.tracks" data-testid="album-info-tracks"/>
+        <TrackList v-if="info.tracks?.length" :album="album" :tracks="info.tracks" data-testid="album-info-tracks" />
 
         <footer>
           Data &copy;
@@ -34,25 +34,22 @@
 <script lang="ts" setup>
 import { faCirclePlay } from '@fortawesome/free-solid-svg-icons'
 import { computed, defineAsyncComponent, ref, toRefs, watch } from 'vue'
-import { useThirdPartyServices } from '@/composables'
 import { songStore } from '@/stores'
 import { mediaInfoService, playbackService } from '@/services'
-import { RouterKey } from '@/symbols'
+import { useRouter, useThirdPartyServices } from '@/composables'
 
 import AlbumThumbnail from '@/components/ui/AlbumArtistThumbnail.vue'
-import { requireInjection } from '@/utils'
-
-const router = requireInjection(RouterKey)
 
 const TrackList = defineAsyncComponent(() => import('@/components/album/AlbumTrackList.vue'))
 
 const props = withDefaults(defineProps<{ album: Album, mode?: MediaInfoDisplayMode }>(), { mode: 'aside' })
 const { album, mode } = toRefs(props)
 
+const { go } = useRouter()
+const { useLastfm } = useThirdPartyServices()
+
 const info = ref<AlbumInfo | null>(null)
 const showingFullWiki = ref(false)
-
-const { useLastfm } = useThirdPartyServices()
 
 watch(album, async () => {
   showingFullWiki.value = false
@@ -65,7 +62,7 @@ const showFull = computed(() => !showSummary.value)
 
 const play = async () => {
   playbackService.queueAndPlay(await songStore.fetchForAlbum(album.value))
-  router.go('queue')
+  go('queue')
 }
 </script>
 

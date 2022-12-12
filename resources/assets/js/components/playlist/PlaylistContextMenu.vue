@@ -1,25 +1,53 @@
 <template>
   <ContextMenuBase ref="base">
-    <li :data-testid="`playlist-context-menu-edit-${playlist.id}`" @click="editPlaylist">
-      {{ playlist.is_smart ? 'Edit' : 'Rename' }}
-    </li>
-    <li :data-testid="`playlist-context-menu-delete-${playlist.id}`" @click="deletePlaylist">Delete</li>
+    <li @click="play">Play</li>
+    <li @click="shuffle">Shuffle</li>
+    <li class="separator" />
+    <li @click="edit">Edit…</li>
+    <li @click="destroy">Delete</li>
   </ContextMenuBase>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { eventBus } from '@/utils'
-import { useContextMenu } from '@/composables'
+import { useContextMenu, useMessageToaster, useRouter } from '@/composables'
+import { playbackService } from '@/services'
+import { songStore } from '@/stores'
 
-const { context, base, ContextMenuBase, open, trigger } = useContextMenu()
+const { base, ContextMenuBase, open, trigger } = useContextMenu()
+const { go } = useRouter()
+const { toastWarning } = useMessageToaster()
+
 const playlist = ref<Playlist>()
 
-const editPlaylist = () => trigger(() => eventBus.emit('MODAL_SHOW_EDIT_PLAYLIST_FORM', playlist.value))
-const deletePlaylist = () => trigger(() => eventBus.emit('PLAYLIST_DELETE', playlist.value))
+const edit = () => trigger(() => eventBus.emit('MODAL_SHOW_EDIT_PLAYLIST_FORM', playlist.value!))
+const destroy = () => trigger(() => eventBus.emit('PLAYLIST_DELETE', playlist.value!))
+
+const play = () => trigger(async () => {
+  const songs = await songStore.fetchForPlaylist(playlist.value!)
+
+  if (songs.length) {
+    playbackService.queueAndPlay(songs)
+    go('queue')
+  } else {
+    toastWarning('The playlist is empty.')
+  }
+})
+
+const shuffle = () => trigger(async () => {
+  const songs = await songStore.fetchForPlaylist(playlist.value!)
+
+  if (songs.length) {
+    playbackService.queueAndPlay(songs, true)
+    go('queue')
+  } else {
+    toastWarning('The playlist is empty.')
+  }
+})
 
 eventBus.on('PLAYLIST_CONTEXT_MENU_REQUESTED', async (event, _playlist) => {
   playlist.value = _playlist
-  await open(event.pageY, event.pageX, { playlist })
+  await open(event.pageY, event.pageX)
 })
 </script>

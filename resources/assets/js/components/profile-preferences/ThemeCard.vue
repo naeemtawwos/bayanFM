@@ -1,9 +1,8 @@
 <template>
   <div
     :class="{ selected: theme.selected }"
-    :data-testid="`theme-card-${theme.id}`"
     :style="thumbnailStyles"
-    :title="`Set current them to ${name}`"
+    :title="`Set current theme to ${name}`"
     class="theme"
     role="button"
     @click="$emit('selected', theme)"
@@ -18,6 +17,8 @@ import { slugToTitle } from '@/utils'
 
 const props = defineProps<{ theme: Theme }>()
 const { theme } = toRefs(props)
+
+const emit = defineEmits<{ (e: 'selected', theme: Theme): void }>()
 
 const name = theme.value.name ? theme.value.name : slugToTitle(theme.value.id)
 

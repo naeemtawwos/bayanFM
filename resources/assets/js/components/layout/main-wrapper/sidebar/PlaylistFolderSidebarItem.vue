@@ -2,18 +2,20 @@
   <li
     class="playlist-folder"
     :class="{ droppable }"
+    tabindex="0"
+    draggable="true"
     @dragleave="onDragLeave"
     @dragover="onDragOver"
+    @dragstart="onDragStart"
     @drop="onDrop"
-    tabindex="0"
   >
     <a @click.prevent="toggle" @contextmenu.prevent="onContextMenu">
-      <icon :icon="opened ? faFolderOpen : faFolder" fixed-width/>
-      {{ folder.name }}
+      <icon :icon="opened ? faFolderOpen : faFolder" fixed-width />
+      <span>{{ folder.name }}</span>
     </a>
 
     <ul v-if="playlistsInFolder.length" v-show="opened">
-      <PlaylistSidebarItem v-for="playlist in playlistsInFolder" :key="playlist.id" :list="playlist" class="sub-item"/>
+      <PlaylistSidebarItem v-for="playlist in playlistsInFolder" :key="playlist.id" :list="playlist" class="sub-item" />
     </ul>
 
     <div
@@ -32,9 +34,9 @@ import { faFolder, faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { computed, defineAsyncComponent, ref, toRefs } from 'vue'
 import { playlistFolderStore, playlistStore } from '@/stores'
 import { eventBus } from '@/utils'
-import { useDroppable } from '@/composables'
+import { useDraggable, useDroppable } from '@/composables'
 
-const PlaylistSidebarItem = defineAsyncComponent(() => import('@/components/playlist/PlaylistSidebarItem.vue'))
+const PlaylistSidebarItem = defineAsyncComponent(() => import('./PlaylistSidebarItem.vue'))
 
 const props = defineProps<{ folder: PlaylistFolder }>()
 const { folder } = toRefs(props)
@@ -46,8 +48,11 @@ const droppableOnHatch = ref(false)
 const playlistsInFolder = computed(() => playlistStore.byFolder(folder.value))
 
 const { acceptsDrop, resolveDroppedValue } = useDroppable(['playlist'])
+const { startDragging } = useDraggable('playlist-folder')
 
 const toggle = () => (opened.value = !opened.value)
+
+const onDragStart = (event: DragEvent) => startDragging(event, folder.value)
 
 const onDragOver = (event: DragEvent) => {
   if (!acceptsDrop(event)) return false
@@ -97,7 +102,11 @@ const onDropOnHatch = async (event: DragEvent) => {
   await playlistFolderStore.removePlaylistFromFolder(folder.value, playlist)
 }
 
-const onContextMenu = event => eventBus.emit('PLAYLIST_FOLDER_CONTEXT_MENU_REQUESTED', event, folder.value)
+const onContextMenu = (event: MouseEvent) => eventBus.emit(
+  'PLAYLIST_FOLDER_CONTEXT_MENU_REQUESTED',
+  event,
+  folder.value
+)
 </script>
 
 <style lang="scss" scoped>

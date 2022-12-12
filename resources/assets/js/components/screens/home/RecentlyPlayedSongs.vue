@@ -4,7 +4,6 @@
       Recently Played
       <Btn
         v-if="songs.length"
-        data-testid="home-view-all-recently-played-btn"
         orange
         rounded
         small
@@ -16,13 +15,13 @@
 
     <ol v-if="loading" class="recent-song-list">
       <li v-for="i in 3" :key="i">
-        <SongCardSkeleton/>
+        <SongCardSkeleton />
       </li>
     </ol>
     <template v-else>
       <ol v-if="songs.length" class="recent-song-list">
         <li v-for="song in songs" :key="song.id">
-          <SongCard :song="song"/>
+          <SongCard :song="song" />
         </li>
       </ol>
       <p v-else class="text-secondary">No songs played as of late.</p>
@@ -33,19 +32,18 @@
 <script lang="ts" setup>
 import { toRef, toRefs } from 'vue'
 import { overviewStore } from '@/stores'
-import { RouterKey } from '@/symbols'
-import { requireInjection } from '@/utils'
+import { useRouter } from '@/composables'
 
 import Btn from '@/components/ui/Btn.vue'
 import SongCard from '@/components/song/SongCard.vue'
 import SongCardSkeleton from '@/components/ui/skeletons/SongCardSkeleton.vue'
 
-const router = requireInjection(RouterKey)
+const { go } = useRouter()
 
 const props = withDefaults(defineProps<{ loading?: boolean }>(), { loading: false })
 const { loading } = toRefs(props)
 
 const songs = toRef(overviewStore.state, 'recentlyPlayed')
 
-const goToRecentlyPlayedScreen = () => router.go('recently-played')
+const goToRecentlyPlayedScreen = () => go('recently-played')
 </script>

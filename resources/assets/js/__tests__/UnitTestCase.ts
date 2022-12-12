@@ -6,10 +6,12 @@ import { defineComponent, nextTick } from 'vue'
 import { commonStore, userStore } from '@/stores'
 import { http } from '@/services'
 import factory from '@/__tests__/factory'
-import { DialogBoxKey, MessageToasterKey, RouterKey } from '@/symbols'
-import { DialogBoxStub, MessageToasterStub } from '@/__tests__/stubs'
+import { DialogBoxKey, MessageToasterKey, OverlayKey, RouterKey } from '@/symbols'
+import { DialogBoxStub, MessageToasterStub, OverlayStub } from '@/__tests__/stubs'
 import { routes } from '@/config'
 import Router from '@/router'
+import userEvent from '@testing-library/user-event'
+import { UserEvent } from '@testing-library/user-event/dist/types/setup/setup'
 
 // A deep-merge function that
 // - supports symbols as keys (_.merge doesn't)
@@ -27,10 +29,13 @@ const deepMerge = (first: object, second: object) => {
 export default abstract class UnitTestCase {
   private backupMethods = new Map()
   protected router: Router
+  protected user: UserEvent
 
   public constructor () {
     this.router = new Router(routes)
     this.mock(http, 'request') // prevent actual HTTP requests from being made
+    this.user = userEvent.setup({ delay: null }) // @see https://github.com/testing-library/user-event/issues/833
+
     this.beforeEach()
     this.afterEach()
     this.test()
@@ -89,7 +94,8 @@ export default abstract class UnitTestCase {
           'koel-clickaway': {},
           'koel-focus': {},
           'koel-tooltip': {},
-          'koel-hide-broken-icon': {}
+          'koel-hide-broken-icon': {},
+          'koel-overflow-fade': {}
         },
         components: {
           icon: this.stub('icon')
@@ -112,6 +118,12 @@ export default abstract class UnitTestCase {
     if (!options.global.provide?.hasOwnProperty(MessageToasterKey)) {
       // @ts-ignore
       options.global.provide[MessageToasterKey] = MessageToasterStub
+    }
+
+    // @ts-ignore
+    if (!options.global.provide.hasOwnProperty(OverlayKey)) {
+      // @ts-ignore
+      options.global.provide[OverlayKey] = OverlayStub
     }
 
     // @ts-ignore
@@ -142,6 +154,11 @@ export default abstract class UnitTestCase {
         configurable: true
       }
     })
+  }
+
+  protected async type (element: HTMLElement, value: string) {
+    await this.user.clear(element)
+    await this.user.type(element, value)
   }
 
   protected abstract test ()

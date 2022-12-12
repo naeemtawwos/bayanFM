@@ -2,24 +2,25 @@
   <section id="artistsWrapper">
     <ScreenHeader layout="collapsed">
       Artists
-      <template v-slot:controls>
-        <ViewModeSwitch v-model="viewMode"/>
+      <template #controls>
+        <ViewModeSwitch v-model="viewMode" />
       </template>
     </ScreenHeader>
 
     <div
       ref="scroller"
+      v-koel-overflow-fade
       :class="`as-${viewMode}`"
       class="artists main-scroll-wrap"
       data-testid="artist-list"
       @scroll="scrolling"
     >
       <template v-if="showSkeletons">
-        <ArtistCardSkeleton v-for="i in 10" :key="i" :layout="itemLayout"/>
+        <ArtistCardSkeleton v-for="i in 10" :key="i" :layout="itemLayout" />
       </template>
       <template v-else>
-        <ArtistCard v-for="artist in artists" :key="artist.id" :artist="artist" :layout="itemLayout"/>
-        <ToTopButton/>
+        <ArtistCard v-for="artist in artists" :key="artist.id" :artist="artist" :layout="itemLayout" />
+        <ToTopButton />
       </template>
     </div>
   </section>
@@ -28,7 +29,7 @@
 <script lang="ts" setup>
 import { computed, ref, toRef, watch } from 'vue'
 import { artistStore, preferenceStore as preferences } from '@/stores'
-import { useInfiniteScroll, useScreen } from '@/composables'
+import { useInfiniteScroll, useRouter } from '@/composables'
 
 import ArtistCard from '@/components/artist/ArtistCard.vue'
 import ArtistCardSkeleton from '@/components/ui/skeletons/ArtistAlbumCardSkeleton.vue'
@@ -63,7 +64,7 @@ const fetchArtists = async () => {
   loading.value = false
 }
 
-useScreen('Artists').onScreenActivated(async () => {
+useRouter().onScreenActivated('Artists', async () => {
   if (!initialized) {
     viewMode.value = preferences.artistsViewMode || 'thumbnails'
     initialized = true

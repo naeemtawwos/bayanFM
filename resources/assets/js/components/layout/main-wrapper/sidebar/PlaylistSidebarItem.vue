@@ -3,7 +3,6 @@
     ref="el"
     :class="{ droppable }"
     class="playlist"
-    data-testid="playlist-sidebar-item"
     draggable="true"
     @contextmenu="onContextMenu"
     @dragleave="onDragLeave"
@@ -12,33 +11,26 @@
     @drop="onDrop"
   >
     <a :class="{ active }" :href="url">
-      <icon v-if="isRecentlyPlayedList(list)" :icon="faClockRotateLeft" class="text-green" fixed-width/>
-      <icon v-else-if="isFavoriteList(list)" :icon="faHeart" class="text-maroon" fixed-width/>
-      <icon
-        v-else-if="list.is_smart"
-        :icon="faBoltLightning"
-        :mask="faFile"
-        fixed-width
-        transform="shrink-7 down-2"
-      />
-      <icon v-else :icon="faMusic" :mask="faFile" fixed-width transform="shrink-7 down-2"/>
-      {{ list.name }}
+      <icon v-if="isRecentlyPlayedList(list)" :icon="faClockRotateLeft" class="text-green" fixed-width />
+      <icon v-else-if="isFavoriteList(list)" :icon="faHeart" class="text-maroon" fixed-width />
+      <icon v-else-if="list.is_smart" :icon="faWandMagicSparkles" fixed-width />
+      <icon v-else :icon="faFileLines" fixed-width />
+      <span>{{ list.name }}</span>
     </a>
   </li>
 </template>
 
 <script lang="ts" setup>
-import { faBoltLightning, faClockRotateLeft, faFile, faHeart, faMusic } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft, faFileLines, faHeart, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 import { computed, ref, toRefs } from 'vue'
-import { eventBus, requireInjection } from '@/utils'
+import { eventBus } from '@/utils'
 import { favoriteStore } from '@/stores'
-import { RouterKey } from '@/symbols'
-import { useDraggable, useDroppable, usePlaylistManagement } from '@/composables'
+import { useDraggable, useDroppable, usePlaylistManagement, useRouter } from '@/composables'
 
+const { onRouteChanged } = useRouter()
 const { startDragging } = useDraggable('playlist')
 const { acceptsDrop, resolveDroppedSongs } = useDroppable(['songs', 'album', 'artist'])
 
-const router = requireInjection(RouterKey)
 const droppable = ref(false)
 
 const { addSongsToPlaylist } = usePlaylistManagement()
@@ -81,7 +73,6 @@ const onDragOver = (event: DragEvent) => {
   if (!acceptsDrop(event)) return false
 
   event.preventDefault()
-  event.dataTransfer!.dropEffect = 'copy'
   droppable.value = true
 
   return false
@@ -108,7 +99,7 @@ const onDrop = async (event: DragEvent) => {
   return false
 }
 
-router.onRouteChanged(route => {
+onRouteChanged(route => {
   switch (route.screen) {
     case 'Favorites':
       active.value = isFavoriteList(list.value)

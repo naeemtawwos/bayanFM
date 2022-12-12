@@ -5,7 +5,6 @@
       <icon
         :icon="faCirclePlus"
         class="control create"
-        data-testid="sidebar-create-playlist-btn"
         role="button"
         title="Create a new playlist or folder"
         @click.stop.prevent="requestContextMenu"
@@ -13,10 +12,10 @@
     </h1>
 
     <ul>
-      <PlaylistSidebarItem :list="{ name: 'Favorites', songs: favorites }"/>
-      <PlaylistSidebarItem :list="{ name: 'Recently Played', songs: [] }"/>
-      <PlaylistFolderSidebarItem v-for="folder in folders" :key="folder.id" :folder="folder"/>
-      <PlaylistSidebarItem v-for="playlist in orphanPlaylists" :key="playlist.id" :list="playlist"/>
+      <PlaylistSidebarItem :list="{ name: 'Favorites', songs: favorites }" />
+      <PlaylistSidebarItem :list="{ name: 'Recently Played', songs: [] }" />
+      <PlaylistFolderSidebarItem v-for="folder in folders" :key="folder.id" :folder="folder" />
+      <PlaylistSidebarItem v-for="playlist in orphanPlaylists" :key="playlist.id" :list="playlist" />
     </ul>
   </section>
 </template>
@@ -25,13 +24,10 @@
 import { faCirclePlus } from '@fortawesome/free-solid-svg-icons'
 import { computed, toRef } from 'vue'
 import { favoriteStore, playlistFolderStore, playlistStore } from '@/stores'
-import { eventBus, requireInjection } from '@/utils'
-import { MessageToasterKey } from '@/symbols'
+import { eventBus } from '@/utils'
 
-import PlaylistSidebarItem from '@/components/playlist/PlaylistSidebarItem.vue'
-import PlaylistFolderSidebarItem from '@/components/playlist/PlaylistFolderSidebarItem.vue'
-
-const toaster = requireInjection(MessageToasterKey)
+import PlaylistSidebarItem from './PlaylistSidebarItem.vue'
+import PlaylistFolderSidebarItem from './PlaylistFolderSidebarItem.vue'
 
 const folders = toRef(playlistFolderStore.state, 'folders')
 const playlists = toRef(playlistStore.state, 'playlists')

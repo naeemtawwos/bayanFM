@@ -1,11 +1,11 @@
 <template>
   <footer id="mainFooter" @contextmenu.prevent="requestContextMenu">
-    <AudioPlayer/>
+    <AudioPlayer />
 
     <div class="wrapper">
-      <SongInfo/>
-      <PlaybackControls/>
-      <ExtraControls/>
+      <SongInfo />
+      <PlaybackControls />
+      <ExtraControls />
     </div>
   </footer>
 </template>
@@ -57,7 +57,7 @@ footer {
   box-shadow: 0 0 30px 20px rgba(0, 0, 0, .2);
   flex-direction: column;
   position: relative;
-  z-index: 1;
+  z-index: 3;
 
   .wrapper {
     display: flex;

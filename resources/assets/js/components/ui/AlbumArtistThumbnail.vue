@@ -5,10 +5,9 @@
     class="cover"
     data-testid="album-artist-thumbnail"
   >
-    <img v-koel-hide-broken-icon :alt="entity.name" :src="image" loading="lazy"/>
+    <img v-koel-hide-broken-icon :alt="entity.name" :src="image" loading="lazy">
     <a
       class="control control-play"
-      href
       role="button"
       @click.prevent="playOrQueue"
       @dragenter.prevent="onDragEnter"
@@ -17,7 +16,7 @@
       @dragover.prevent
     >
       <span class="hidden">{{ buttonLabel }}</span>
-      <span class="icon"/>
+      <span class="icon" />
     </a>
   </span>
 </template>
@@ -27,14 +26,13 @@ import { orderBy } from 'lodash'
 import { computed, ref, toRef, toRefs } from 'vue'
 import { albumStore, artistStore, queueStore, songStore, userStore } from '@/stores'
 import { playbackService } from '@/services'
-import { defaultCover, fileReader, logger, requireInjection } from '@/utils'
-import { useAuthorization } from '@/composables'
-import { MessageToasterKey, RouterKey } from '@/symbols'
+import { defaultCover, fileReader, logger } from '@/utils'
+import { useAuthorization, useMessageToaster, useRouter } from '@/composables'
 
 const VALID_IMAGE_TYPES = ['image/jpeg', 'image/gif', 'image/png', 'image/webp']
 
-const toaster = requireInjection(MessageToasterKey)
-const router = requireInjection(RouterKey)
+const { toastSuccess } = useMessageToaster()
+const { go } = useRouter()
 
 const props = defineProps<{ entity: Album | Artist }>()
 const { entity } = toRefs(props)
@@ -58,19 +56,19 @@ const buttonLabel = computed(() => forAlbum.value
 
 const { isAdmin: allowsUpload } = useAuthorization()
 
-const playOrQueue = async (event: KeyboardEvent) => {
+const playOrQueue = async (event: MouseEvent) => {
   const songs = forAlbum.value
     ? await songStore.fetchForAlbum(entity.value as Album)
     : await songStore.fetchForArtist(entity.value as Artist)
 
   if (event.altKey) {
     queueStore.queue(orderBy(songs, sortFields.value))
-    toaster.value.success('Songs added to queue.')
+    toastSuccess('Songs added to queue.')
     return
   }
 
   playbackService.queueAndPlay(songs)
-  router.go('queue')
+  go('queue')
 }
 
 const onDragEnter = () => (droppable.value = allowsUpload.value)
